@@ -65,8 +65,8 @@
     </license>
   </licenses>
   <scm>
-    <developerConnection>scm:git:ssh://${user.name}@code.renci.org/gitroot/mapseq-pipeline-ncgenes-dx</developerConnection>
-    <connection>scm:git:ssh://developername@code.renci.org/gitroot/mapseq-pipeline-ncgenes-dx</connection>
+    <developerConnection>scm:git:ssh://${user.name}@code.renci.org/gitroot/mps_ncg_dx_pl</developerConnection>
+    <connection>scm:git:ssh://developername@code.renci.org/gitroot/mps_ncg_dx_pl</connection>
   </scm>
   <repositories>
     <repository> 
