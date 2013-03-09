@@ -410,9 +410,9 @@
     </plugins>
   </build>
   <modules>
+    <module>ncgenes-dx-workflow</module>
     <module>ncgenes-dx-commands</module>
     <module>ncgenes-dx-features</module>
     <module>ncgenes-dx-messaging</module>
-    <module>ncgenes-dx-workflow</module>
   </modules>
 </project>
