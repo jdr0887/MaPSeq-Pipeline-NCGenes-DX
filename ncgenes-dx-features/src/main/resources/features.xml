@@ -1,9 +1,9 @@
 <features name="mapseq-pipeline-ncgenes-dx-${project.version}">
 
   <feature name="mapseq-pipeline-ncgenes-dx" version="${project.version}" resolver="(obr)">
-    <bundle>mvn:edu.unc.mapseq.pipelines.ncgenes-dx/workflow/${project.version}</bundle>
-    <bundle>mvn:edu.unc.mapseq.pipelines.ncgenes-dx/commands/${project.version}</bundle>
-    <bundle start-level="100">mvn:edu.unc.mapseq.pipelines.ncgenes-dx/messaging/${project.version}</bundle>
+    <bundle>mvn:edu.unc.mapseq.pipelines.ncgenes-dx/ncgenes-dx-workflow/${project.version}</bundle>
+    <bundle>mvn:edu.unc.mapseq.pipelines.ncgenes-dx/ncgenes-dx-commands/${project.version}</bundle>
+    <bundle start-level="100">mvn:edu.unc.mapseq.pipelines.ncgenes-dx/ncgenes-dx-messaging/${project.version}</bundle>
   </feature>
 
 </features>
