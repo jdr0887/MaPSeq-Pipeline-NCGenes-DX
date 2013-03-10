@@ -60,7 +60,7 @@ public class NCGenesDXPipeline extends AbstractPipeline<NCGenesDXPipelineBeanSer
 
     @Override
     public String getName() {
-        return NCGenesDXPipeline.class.getSimpleName().replace("Pipeline", "").toUpperCase();
+        return NCGenesDXPipeline.class.getSimpleName().replace("Pipeline", "");
     }
 
     @Override
