@@ -16,7 +16,7 @@ public class NCGenesDXPipelineExecutorService {
     public void start() throws Exception {
         logger.info("ENTERING stop()");
 
-        long delay = 15 * 1000; // 15 seconds
+        long delay = 1 * 60 * 1000; // 1 minute
         long period = 5 * 60 * 1000; // 5 minutes
 
         NCGenesDXPipelineExecutorTask task = new NCGenesDXPipelineExecutorTask();
