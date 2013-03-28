@@ -30,8 +30,8 @@ public class NCGenesDXMessageTest {
             // producer.send(session.createTextMessage(String.format(format, "rc_renci.svc", 113052, 8, 18,
             // "NCG_00151_V8_Dx18")));
 
-            producer.send(session.createTextMessage(String.format(format, "rc_renci.svc", 86851, 8, 9,
-                    "NCG_00049_V8_Dx9")));
+            producer.send(session.createTextMessage(String.format(format, "rc_renci.svc", 234652, 13, 4,
+                    "NCG_00099_V13_Dx4")));
 
         } catch (JMSException e) {
             e.printStackTrace();
