@@ -83,6 +83,7 @@ public class NCGenesDXMessageListener implements MessageListener {
             try {
                 account = pipelineBeanService.getMaPSeqDAOBean().getAccountDAO().findByName(accountName);
             } catch (MaPSeqDAOException e) {
+                logger.error("Error", e);
             }
 
             if (account == null) {
