@@ -22,7 +22,7 @@ import edu.unc.mapseq.dao.model.SequencerRun;
 import edu.unc.mapseq.dao.model.WorkflowPlan;
 import edu.unc.mapseq.dao.model.WorkflowRun;
 import edu.unc.mapseq.dao.model.WorkflowRunStatusType;
-import edu.unc.mapseq.messaging.common.EntityUtil;
+import edu.unc.mapseq.pipeline.EntityUtil;
 import edu.unc.mapseq.pipeline.ncgenes.dx.NCGenesDXPipelineBeanService;
 
 public class NCGenesDXMessageListener implements MessageListener {
