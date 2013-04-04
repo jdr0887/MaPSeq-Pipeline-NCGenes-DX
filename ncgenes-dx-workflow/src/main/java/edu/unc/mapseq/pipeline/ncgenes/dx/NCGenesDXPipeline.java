@@ -102,7 +102,7 @@ public class NCGenesDXPipeline extends AbstractPipeline<NCGenesDXPipelineBeanSer
             htsfSampleSet.addAll(getWorkflowPlan().getHTSFSamples());
         }
 
-	logger.info("htsfSampleSet.size(): {}", htsfSampleSet.size());
+        logger.info("htsfSampleSet.size(): {}", htsfSampleSet.size());
 
         for (HTSFSample htsfSample : htsfSampleSet) {
 
