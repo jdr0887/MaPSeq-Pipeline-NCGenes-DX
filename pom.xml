@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.unc.mapseq.pipelines</groupId>
   <artifactId>ncgenes-dx</artifactId>
-  <version>0.1.1</version>
+  <version>0.1.2-SNAPSHOT</version>
   <packaging>pom</packaging>
   <url>https://ci-dev.renci.org/site/mapseq</url>
   <properties>
@@ -176,7 +176,7 @@
       <dependency>
       	<groupId>edu.unc.mapseq.pipelines.ncgenes-dx</groupId>
       	<artifactId>ncgenes-dx-workflow</artifactId>
-      	<version>0.1.1</version>
+      	<version>0.1.2-SNAPSHOT</version>
       </dependency>
       <dependency>
 	<groupId>edu.unc.mapseq.mapseq-messaging</groupId>
