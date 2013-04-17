@@ -8,8 +8,8 @@
       <cm:property name="maxPoolSize" value="20" />
       <cm:property name="period" value="5" />
       <cm:property name="reference-sequence"
-        value="/proj/renci/sequence_analysis/references/BUILD.37.1/bwa061sam0118/BUILD.37.1.sorted.shortid.fa" />
-      <cm:property name="icSNPIntervalList" value="/proj/renci/rc_renci/resources/ncgenes/ic_snp_v2.list" />
+        value="$NCGENESDX_REFERENCES_DIRECTORY/BUILD.37.1/bwa061sam0118/BUILD.37.1.sorted.shortid.fa" />
+      <cm:property name="icSNPIntervalList" value="$NCGENESDX_RESOURCES_DIRECTORY/ic_snp_v2.list" />
     </cm:default-properties>
   </cm:property-placeholder>
 
