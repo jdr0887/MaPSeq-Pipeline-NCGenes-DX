@@ -13,7 +13,7 @@ public class NCGenesDXPipelineExecutorService {
 
     private NCGenesDXPipelineExecutorTask task;
 
-    private Long period = Long.valueOf(5 * 60 * 1000);
+    private Long period = 5L;
 
     public NCGenesDXPipelineExecutorService() {
         super();
