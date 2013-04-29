@@ -4,8 +4,8 @@
 
   <cm:property-placeholder persistent-id="edu.unc.mapseq.pipeline.ncgenes.dx" update-strategy="reload">
     <cm:default-properties>
-      <cm:property name="corePoolSize" value="20" />
-      <cm:property name="maxPoolSize" value="20" />
+      <cm:property name="corePoolSize" value="100" />
+      <cm:property name="maxPoolSize" value="100" />
       <cm:property name="period" value="5" />
       <cm:property name="reference-sequence"
         value="$NCGENESDX_REFERENCES_DIRECTORY/BUILD.37.1/bwa061sam0118/BUILD.37.1.sorted.shortid.fa" />
