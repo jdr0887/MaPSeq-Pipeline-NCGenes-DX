@@ -111,10 +111,8 @@ public class NCGenesDXPipeline extends AbstractPipeline<NCGenesDXPipelineBeanSer
             }
 
             SequencerRun sequencerRun = htsfSample.getSequencerRun();
-            File outputDirectory = createOutputDirectory(sequencerRun.getName(), htsfSample.getName(), getName()
+            File outputDirectory = createOutputDirectory(sequencerRun.getName(), htsfSample, getName()
                     .replace("DX", ""));
-            File tmpDir = new File(outputDirectory, "tmp");
-            tmpDir.mkdirs();
 
             Set<EntityAttribute> attributeSet = htsfSample.getAttributes();
             Iterator<EntityAttribute> attributeIter = attributeSet.iterator();
@@ -192,6 +190,7 @@ public class NCGenesDXPipeline extends AbstractPipeline<NCGenesDXPipelineBeanSer
                 // new job
                 CondorJob gatkGeneDepthOfCoverageJob = PipelineJobFactory.createJob(++count,
                         GATKDepthOfCoverageCLI.class, getWorkflowPlan(), htsfSample);
+                gatkGeneDepthOfCoverageJob.setSiteName(getPipelineBeanService().getSiteName());
                 gatkGeneDepthOfCoverageJob.addArgument(GATKDepthOfCoverageCLI.PHONEHOME,
                         GATKPhoneHomeType.NO_ET.toString());
                 gatkGeneDepthOfCoverageJob.addArgument(GATKDepthOfCoverageCLI.DOWNSAMPLINGTYPE,
@@ -216,6 +215,7 @@ public class NCGenesDXPipeline extends AbstractPipeline<NCGenesDXPipelineBeanSer
                 // new job
                 CondorJob samtoolsViewJob = PipelineJobFactory.createJob(++count, SAMToolsViewCLI.class,
                         getWorkflowPlan(), htsfSample);
+                samtoolsViewJob.setSiteName(getPipelineBeanService().getSiteName());
                 samtoolsViewJob.addArgument(SAMToolsViewCLI.BAMFORMAT);
                 File samtoolsViewOutput = new File(outputDirectory, bamFile.getName().replace(".bam", ".filtered.bam"));
                 samtoolsViewJob.addArgument(SAMToolsViewCLI.OUTPUT, samtoolsViewOutput.getAbsolutePath());
@@ -226,11 +226,11 @@ public class NCGenesDXPipeline extends AbstractPipeline<NCGenesDXPipelineBeanSer
 
                 CondorJob picardSortSAMJob = PipelineJobFactory.createJob(++count, PicardSortSAMCLI.class,
                         getWorkflowPlan(), htsfSample);
+                picardSortSAMJob.setSiteName(getPipelineBeanService().getSiteName());
                 picardSortSAMJob.addArgument(PicardSortSAMCLI.INPUT, samtoolsViewOutput.getAbsolutePath());
                 File picardSortOutput = new File(outputDirectory, samtoolsViewOutput.getName().replace(".bam",
                         String.format(".sorted.filtered_by_dxid_%s_v%s.bam", dx, version)));
                 picardSortSAMJob.addArgument(PicardSortSAMCLI.OUTPUT, picardSortOutput.getAbsolutePath());
-                picardSortSAMJob.addArgument(PicardSortSAMCLI.TMPDIR, tmpDir.getAbsolutePath());
                 picardSortSAMJob.addArgument(PicardSortSAMCLI.SORTORDER, PicardSortOrderType.COORDINATE.toString()
                         .toLowerCase());
                 graph.addVertex(picardSortSAMJob);
@@ -239,6 +239,7 @@ public class NCGenesDXPipeline extends AbstractPipeline<NCGenesDXPipelineBeanSer
                 // new job
                 CondorJob picardSortSAMIndexJob = PipelineJobFactory.createJob(++count, SAMToolsIndexCLI.class,
                         getWorkflowPlan(), htsfSample);
+                picardSortSAMIndexJob.setSiteName(getPipelineBeanService().getSiteName());
                 picardSortSAMIndexJob.addArgument(SAMToolsIndexCLI.INPUT, picardSortOutput.getAbsolutePath());
                 File picardSortSAMIndexOut = new File(outputDirectory, picardSortOutput.getName().replace(".bam",
                         ".bai"));
@@ -248,6 +249,7 @@ public class NCGenesDXPipeline extends AbstractPipeline<NCGenesDXPipelineBeanSer
 
                 // new job
                 CondorJob zipJob = PipelineJobFactory.createJob(++count, ZipCLI.class, getWorkflowPlan(), htsfSample);
+                zipJob.setSiteName(getPipelineBeanService().getSiteName());
                 zipJob.addArgument(ZipCLI.ENTRY, picardSortOutput.getAbsolutePath());
                 zipJob.addArgument(ZipCLI.ENTRY, picardSortSAMIndexOut.getAbsolutePath());
                 File zipOutputFile = new File(outputDirectory, picardSortOutput.getName().replace(".bam", ".zip"));
@@ -272,6 +274,7 @@ public class NCGenesDXPipeline extends AbstractPipeline<NCGenesDXPipelineBeanSer
                 // new job
                 CondorJob filterVariantJob = PipelineJobFactory.createJob(++count, FilterVariantCLI.class,
                         getWorkflowPlan(), htsfSample);
+                filterVariantJob.setSiteName(getPipelineBeanService().getSiteName());
                 filterVariantJob.addArgument(FilterVariantCLI.INTERVALLIST,
                         intervalListByDXAndVersionFile.getAbsolutePath());
                 filterVariantJob.addArgument(FilterVariantCLI.INPUT, gatkApplyRecalibrationOut.getAbsolutePath());
@@ -322,7 +325,7 @@ public class NCGenesDXPipeline extends AbstractPipeline<NCGenesDXPipelineBeanSer
             }
 
             SequencerRun sequencerRun = htsfSample.getSequencerRun();
-            File outputDirectory = createOutputDirectory(sequencerRun.getName(), htsfSample.getName(), getName()
+            File outputDirectory = createOutputDirectory(sequencerRun.getName(), htsfSample, getName()
                     .replace("DX", ""));
             File tmpDir = new File(outputDirectory, "tmp");
             tmpDir.mkdirs();
