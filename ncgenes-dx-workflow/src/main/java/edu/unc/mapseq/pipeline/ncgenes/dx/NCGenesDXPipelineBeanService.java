@@ -8,8 +8,18 @@ public class NCGenesDXPipelineBeanService extends AbstractPipelineBeanService {
 
     private String icSNPIntervalList;
 
+    private String siteName;
+
     public NCGenesDXPipelineBeanService() {
         super();
+    }
+
+    public String getSiteName() {
+        return siteName;
+    }
+
+    public void setSiteName(String siteName) {
+        this.siteName = siteName;
     }
 
     public String getReferenceSequence() {
