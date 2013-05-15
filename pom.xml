@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.unc.mapseq.pipelines</groupId>
   <artifactId>ncgenes-dx</artifactId>
-  <version>0.1.8-SNAPSHOT</version>
+  <version>0.1.8</version>
   <packaging>pom</packaging>
   <url>https://ci-dev.renci.org/site/mapseq</url>
   <properties>
@@ -61,7 +61,7 @@
   <scm>
     <developerConnection>scm:git:ssh://${user.name}@code.renci.org/gitroot/mps_ncg_dx_pl</developerConnection>
     <connection>scm:git:ssh://developername@code.renci.org/gitroot/mps_ncg_dx_pl</connection>
-    <tag>HEAD</tag>
+    <tag>ncgenes-dx-0.1.8</tag>
   </scm>
   <repositories>
     <repository>
@@ -183,7 +183,7 @@
       <dependency>
       	<groupId>edu.unc.mapseq.pipelines.ncgenes-dx</groupId>
       	<artifactId>ncgenes-dx-workflow</artifactId>
-      	<version>0.1.8-SNAPSHOT</version>
+      	<version>0.1.8</version>
       </dependency>
       <dependency>
 	<groupId>edu.unc.mapseq.mapseq-messaging</groupId>
