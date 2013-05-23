@@ -24,14 +24,17 @@ public class NCGenesDXMessageTest {
             session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             Destination destination = session.createQueue("queue/ncgenes.dx");
             MessageProducer producer = session.createProducer(destination);
-            producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+            producer.setDeliveryMode(DeliveryMode.PERSISTENT);
 
             String format = "{\"account_name\":\"%s\",\"entities\":[{\"entity_type\":\"HTSFSample\",\"guid\":\"%d\",\"attributes\":[{\"name\":\"GATKDepthOfCoverage.interval_list.version\",\"value\":\"%d\"},{\"name\":\"SAMToolsView.dx.id\",\"value\":\"%d\"}]},{\"entity_type\":\"WorkflowRun\",\"name\":\"%s\"}]}";
             // producer.send(session.createTextMessage(String.format(format, "rc_renci.svc", 113052, 8, 18,
             // "NCG_00151_V8_Dx18")));
 
-            producer.send(session.createTextMessage(String.format(format, "rc_renci.svc", 234652, 13, 4,
-                    "NCG_00099_V13_Dx4")));
+            // producer.send(session.createTextMessage(String.format(format, "rc_renci.svc", 234652, 13, 4,
+            // "NCG_00099_V13_Dx4")));
+
+            producer.send(session.createTextMessage(String.format(format, "rc_renci.svc", 52422, 7, 5,
+                    "NCG_00009_V7_Dx5")));
 
         } catch (JMSException e) {
             e.printStackTrace();
