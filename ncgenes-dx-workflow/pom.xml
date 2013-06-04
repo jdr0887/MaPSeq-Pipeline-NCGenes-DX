@@ -17,7 +17,7 @@
     </dependency>
     <dependency>
       <groupId>edu.unc.mapseq</groupId>
-      <artifactId>mapseq-modules</artifactId>
+      <artifactId>modules</artifactId>
     </dependency>
   </dependencies>
   <build>
