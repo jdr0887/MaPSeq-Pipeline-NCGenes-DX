@@ -43,7 +43,7 @@
         <artifactId>maven-bundle-plugin</artifactId>
         <configuration>
           <instructions>
-            <Bundle-Activator>edu.unc.mapseq.messaging.ncgenes.dx.Activator</Bundle-Activator>
+            <Export-Package>edu.unc.mapseq.messaging.ncgenes.dx.*</Export-Package>
             <Import-Package>*</Import-Package>
             <Private-Package />
           </instructions>
