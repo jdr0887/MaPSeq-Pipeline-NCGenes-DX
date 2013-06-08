@@ -2,7 +2,7 @@
   <parent>
     <groupId>edu.unc</groupId>
     <artifactId>mapseq</artifactId>
-    <version>0.2.0</version>
+    <version>0.2.1</version>
   </parent>
   <name>MaPSeq :: Pipelines :: NCGenes DX</name>
   <modelVersion>4.0.0</modelVersion>
@@ -61,6 +61,7 @@
   </dependencyManagement>
   <modules>
     <module>ncgenes-dx-workflow</module>
+    <module>ncgenes-dx-executor</module>
     <module>ncgenes-dx-commands</module>
     <module>ncgenes-dx-features</module>
     <module>ncgenes-dx-messaging</module>
