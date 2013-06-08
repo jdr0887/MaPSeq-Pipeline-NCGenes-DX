@@ -5,18 +5,18 @@
     <command name="mapseq/run-ncgenes-dx-pipeline">
       <action class="edu.unc.mapseq.commands.ncgenes.dx.RunNCGenesDXPipelineAction">
         <property name="mapseqDAOBean" ref="mapseqDAOBean" />
-        <property name="mapseqConfigurationService" ref="mapseqConfigurationService" />
+        <property name="maPSeqConfigurationService" ref="maPSeqConfigurationService" />
       </action>
     </command>
     <command name="mapseq/register-ncgenes-dx-to-irods">
       <action class="edu.unc.mapseq.commands.ncgenes.dx.RegisterNCGenesDXToIRODSAction">
         <property name="mapseqDAOBean" ref="mapseqDAOBean" />
-        <property name="mapseqConfigurationService" ref="mapseqConfigurationService" />
+        <property name="maPSeqConfigurationService" ref="maPSeqConfigurationService" />
       </action>
     </command>
   </command-bundle>
 
-  <reference id="mapseqConfigurationService" interface="edu.unc.mapseq.config.MaPSeqConfigurationService" />
+  <reference id="maPSeqConfigurationService" interface="edu.unc.mapseq.config.MaPSeqConfigurationService" />
   <reference id="accountDAO" interface="edu.unc.mapseq.dao.AccountDAO" />
   <reference id="accountGroupDAO" interface="edu.unc.mapseq.dao.AccountGroupDAO" />
   <reference id="fileDataDAO" interface="edu.unc.mapseq.dao.FileDataDAO" />
