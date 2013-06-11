@@ -25,7 +25,7 @@ import edu.unc.mapseq.dao.model.SequencerRun;
 import edu.unc.mapseq.pipeline.IRODSBean;
 import edu.unc.mapseq.pipeline.PipelineUtil;
 
-@Command(scope = "mapseq", name = "register-ncgenes-dx-to-irods", description = "Register a NCGenesDX sample output to iRODS")
+@Command(scope = "ncgenes-dx", name = "register-to-irods", description = "Register a NCGenesDX sample output to iRODS")
 public class RegisterNCGenesDXToIRODSAction extends AbstractAction {
 
     private final Logger logger = LoggerFactory.getLogger(RegisterNCGenesDXToIRODSAction.class);

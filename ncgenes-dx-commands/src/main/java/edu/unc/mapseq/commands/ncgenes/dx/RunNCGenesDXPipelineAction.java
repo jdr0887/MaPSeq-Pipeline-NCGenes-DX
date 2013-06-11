@@ -15,7 +15,7 @@ import org.apache.karaf.shell.console.AbstractAction;
 import edu.unc.mapseq.config.MaPSeqConfigurationService;
 import edu.unc.mapseq.dao.MaPSeqDAOBean;
 
-@Command(scope = "mapseq", name = "run-ncgenes-dx-pipeline", description = "Run NCGenes DX Pipeline")
+@Command(scope = "ncgenes-dx", name = "run-pipeline", description = "Run NCGenes DX Pipeline")
 public class RunNCGenesDXPipelineAction extends AbstractAction {
 
     @Argument(index = 0, name = "workflowRunName", description = "WorkflowRun.name", required = true, multiValued = false)
