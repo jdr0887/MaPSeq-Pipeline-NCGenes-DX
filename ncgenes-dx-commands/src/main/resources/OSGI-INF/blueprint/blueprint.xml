@@ -4,13 +4,13 @@
   <command-bundle xmlns="http://karaf.apache.org/xmlns/shell/v1.1.0">
     <command name="mapseq/run-ncgenes-dx-pipeline">
       <action class="edu.unc.mapseq.commands.ncgenes.dx.RunNCGenesDXPipelineAction">
-        <property name="mapseqDAOBean" ref="mapseqDAOBean" />
+        <property name="maPSeqDAOBean" ref="maPSeqDAOBean" />
         <property name="maPSeqConfigurationService" ref="maPSeqConfigurationService" />
       </action>
     </command>
     <command name="mapseq/register-ncgenes-dx-to-irods">
       <action class="edu.unc.mapseq.commands.ncgenes.dx.RegisterNCGenesDXToIRODSAction">
-        <property name="mapseqDAOBean" ref="mapseqDAOBean" />
+        <property name="maPSeqDAOBean" ref="maPSeqDAOBean" />
         <property name="maPSeqConfigurationService" ref="maPSeqConfigurationService" />
       </action>
     </command>
@@ -29,7 +29,7 @@
   <reference id="workflowPlanDAO" interface="edu.unc.mapseq.dao.WorkflowPlanDAO" />
   <reference id="workflowRunDAO" interface="edu.unc.mapseq.dao.WorkflowRunDAO" />
 
-  <bean id="mapseqDAOBean" class="edu.unc.mapseq.dao.MaPSeqDAOBean">
+  <bean id="maPSeqDAOBean" class="edu.unc.mapseq.dao.MaPSeqDAOBean">
     <property name="accountDAO" ref="accountDAO" />
     <property name="accountGroupDAO" ref="accountGroupDAO" />
     <property name="fileDataDAO" ref="fileDataDAO" />
