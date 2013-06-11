@@ -30,9 +30,9 @@ public class RegisterNCGenesDXToIRODSAction extends AbstractAction {
 
     private final Logger logger = LoggerFactory.getLogger(RegisterNCGenesDXToIRODSAction.class);
 
-    private MaPSeqDAOBean mapseqDAOBean;
+    private MaPSeqDAOBean maPSeqDAOBean;
 
-    private MaPSeqConfigurationService mapseqConfigurationService;
+    private MaPSeqConfigurationService maPSeqConfigurationService;
 
     @Argument(index = 0, name = "htsfSampleId", required = true, multiValued = false)
     private Long htsfSampleId;
@@ -46,11 +46,11 @@ public class RegisterNCGenesDXToIRODSAction extends AbstractAction {
     @Override
     protected Object doExecute() throws Exception {
 
-        RunModeType runMode = getMapseqConfigurationService().getRunMode();
+        RunModeType runMode = getMaPSeqConfigurationService().getRunMode();
 
         HTSFSample htsfSample;
         try {
-            htsfSample = mapseqDAOBean.getHTSFSampleDAO().findById(htsfSampleId);
+            htsfSample = maPSeqDAOBean.getHTSFSampleDAO().findById(htsfSampleId);
         } catch (MaPSeqDAOException e1) {
             e1.printStackTrace();
             return null;
@@ -260,20 +260,20 @@ public class RegisterNCGenesDXToIRODSAction extends AbstractAction {
 
     }
 
-    public MaPSeqDAOBean getMapseqDAOBean() {
-        return mapseqDAOBean;
+    public MaPSeqDAOBean getMaPSeqDAOBean() {
+        return maPSeqDAOBean;
     }
 
-    public void setMapseqDAOBean(MaPSeqDAOBean mapseqDAOBean) {
-        this.mapseqDAOBean = mapseqDAOBean;
+    public void setMaPSeqDAOBean(MaPSeqDAOBean maPSeqDAOBean) {
+        this.maPSeqDAOBean = maPSeqDAOBean;
     }
 
-    public MaPSeqConfigurationService getMapseqConfigurationService() {
-        return mapseqConfigurationService;
+    public MaPSeqConfigurationService getMaPSeqConfigurationService() {
+        return maPSeqConfigurationService;
     }
 
-    public void setMapseqConfigurationService(MaPSeqConfigurationService mapseqConfigurationService) {
-        this.mapseqConfigurationService = mapseqConfigurationService;
+    public void setMaPSeqConfigurationService(MaPSeqConfigurationService maPSeqConfigurationService) {
+        this.maPSeqConfigurationService = maPSeqConfigurationService;
     }
 
     public Long getHtsfSampleId() {
