@@ -43,7 +43,6 @@ import edu.unc.mapseq.module.samtools.SAMToolsIndexCLI;
 import edu.unc.mapseq.module.samtools.SAMToolsViewCLI;
 import edu.unc.mapseq.pipeline.AbstractPipeline;
 import edu.unc.mapseq.pipeline.IRODSBean;
-import edu.unc.mapseq.pipeline.PipelineBeanService;
 import edu.unc.mapseq.pipeline.PipelineException;
 import edu.unc.mapseq.pipeline.PipelineJobFactory;
 import edu.unc.mapseq.pipeline.PipelineUtil;
@@ -51,8 +50,6 @@ import edu.unc.mapseq.pipeline.PipelineUtil;
 public class NCGenesDXPipeline extends AbstractPipeline {
 
     private final Logger logger = LoggerFactory.getLogger(NCGenesDXPipeline.class);
-
-    private PipelineBeanService pipelineBeanService;
 
     public NCGenesDXPipeline() {
         super();
@@ -92,7 +89,7 @@ public class NCGenesDXPipeline extends AbstractPipeline {
         if (getWorkflowPlan().getSequencerRun() != null) {
             logger.info("sequencerRun: {}", getWorkflowPlan().getSequencerRun().toString());
             try {
-                htsfSampleSet.addAll(this.pipelineBeanService.getMaPSeqDAOBean().getHTSFSampleDAO()
+                htsfSampleSet.addAll(getPipelineBeanService().getMaPSeqDAOBean().getHTSFSampleDAO()
                         .findBySequencerRunId(getWorkflowPlan().getSequencerRun().getId()));
             } catch (MaPSeqDAOException e) {
                 e.printStackTrace();
@@ -160,7 +157,7 @@ public class NCGenesDXPipeline extends AbstractPipeline {
             File bamIndexFile = null;
 
             List<File> potentialBAMFileList = PipelineUtil
-                    .lookupFileByJobAndMimeType(fileDataSet, this.pipelineBeanService.getMaPSeqDAOBean(),
+                    .lookupFileByJobAndMimeType(fileDataSet, getPipelineBeanService().getMaPSeqDAOBean(),
                             GATKTableRecalibration.class, MimeType.APPLICATION_BAM);
 
             // assume that only one GATKTableRecalibration job exists
@@ -174,7 +171,7 @@ public class NCGenesDXPipeline extends AbstractPipeline {
             }
 
             List<File> potentialBAMIndexFileList = PipelineUtil.lookupFileByJobAndMimeType(fileDataSet,
-                    this.pipelineBeanService.getMaPSeqDAOBean(), SAMToolsIndex.class, MimeType.APPLICATION_BAM_INDEX);
+                    getPipelineBeanService().getMaPSeqDAOBean(), SAMToolsIndex.class, MimeType.APPLICATION_BAM_INDEX);
 
             if (potentialBAMIndexFileList.size() > 0) {
                 for (File file : potentialBAMIndexFileList) {
@@ -263,7 +260,7 @@ public class NCGenesDXPipeline extends AbstractPipeline {
 
                 File gatkApplyRecalibrationOut = null;
                 List<File> potentialGATKApplyRecalibrationFileList = PipelineUtil.lookupFileByJobAndMimeType(
-                        fileDataSet, this.pipelineBeanService.getMaPSeqDAOBean(), GATKApplyRecalibration.class,
+                        fileDataSet, getPipelineBeanService().getMaPSeqDAOBean(), GATKApplyRecalibration.class,
                         MimeType.TEXT_VCF);
                 // assume that only one GATKApplyRecalibrationCLI job exists
                 if (potentialGATKApplyRecalibrationFileList.size() > 0) {
@@ -305,7 +302,7 @@ public class NCGenesDXPipeline extends AbstractPipeline {
         if (getWorkflowPlan().getSequencerRun() != null) {
             logger.info("sequencerRun: {}", getWorkflowPlan().getSequencerRun().toString());
             try {
-                htsfSampleSet.addAll(this.pipelineBeanService.getMaPSeqDAOBean().getHTSFSampleDAO()
+                htsfSampleSet.addAll(getPipelineBeanService().getMaPSeqDAOBean().getHTSFSampleDAO()
                         .findBySequencerRunId(getWorkflowPlan().getSequencerRun().getId()));
             } catch (MaPSeqDAOException e) {
                 e.printStackTrace();
@@ -362,7 +359,7 @@ public class NCGenesDXPipeline extends AbstractPipeline {
             File bamFile = null;
 
             List<File> potentialBAMFileList = PipelineUtil
-                    .lookupFileByJobAndMimeType(fileDataSet, this.pipelineBeanService.getMaPSeqDAOBean(),
+                    .lookupFileByJobAndMimeType(fileDataSet, getPipelineBeanService().getMaPSeqDAOBean(),
                             GATKTableRecalibration.class, MimeType.APPLICATION_BAM);
 
             // assume that only one GATKTableRecalibration job exists
@@ -521,14 +518,6 @@ public class NCGenesDXPipeline extends AbstractPipeline {
 
         }
 
-    }
-
-    public PipelineBeanService getPipelineBeanService() {
-        return pipelineBeanService;
-    }
-
-    public void setPipelineBeanService(PipelineBeanService pipelineBeanService) {
-        this.pipelineBeanService = pipelineBeanService;
     }
 
 }
