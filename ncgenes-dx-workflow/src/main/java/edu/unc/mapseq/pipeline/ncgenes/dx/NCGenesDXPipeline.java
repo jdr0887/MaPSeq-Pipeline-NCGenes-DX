@@ -29,6 +29,7 @@ import edu.unc.mapseq.dao.model.FileData;
 import edu.unc.mapseq.dao.model.HTSFSample;
 import edu.unc.mapseq.dao.model.MimeType;
 import edu.unc.mapseq.dao.model.SequencerRun;
+import edu.unc.mapseq.module.core.MoveCLI;
 import edu.unc.mapseq.module.core.ZipCLI;
 import edu.unc.mapseq.module.filter.FilterVariantCLI;
 import edu.unc.mapseq.module.gatk.GATKApplyRecalibration;
@@ -211,8 +212,6 @@ public class NCGenesDXPipeline extends AbstractPipeline {
                         intervalListByVersionFile.getAbsolutePath());
                 String outputPrefix = bamFile.getName().replace(".bam", String.format(".coverage.v%s.gene", version));
                 gatkGeneDepthOfCoverageJob.addArgument(GATKDepthOfCoverageCLI.OUTPUTPREFIX, outputPrefix);
-                gatkGeneDepthOfCoverageJob.setPostScript(String.format("/bin/mv %s/%s* %s", getSubmitDirectory()
-                        .getAbsolutePath(), outputPrefix, outputDirectory.getAbsolutePath()));
                 graph.addVertex(gatkGeneDepthOfCoverageJob);
 
                 // new job
@@ -398,7 +397,15 @@ public class NCGenesDXPipeline extends AbstractPipeline {
             CommandOutput commandOutput = null;
 
             List<CommandInput> commandInputList = new ArrayList<CommandInput>();
+
             CommandInput commandInput = new CommandInput();
+            String outputPrefix = bamFile.getName().replace(".bam", String.format(".coverage.v%s.gene", version));
+            commandInput.setCommand(String.format("/bin/mv %s/%s* %s", getSubmitDirectory().getAbsolutePath(),
+                    outputPrefix, outputDirectory.getAbsolutePath()));
+            commandInput.setWorkDir(tmpDir);
+            commandInputList.add(commandInput);
+
+            commandInput = new CommandInput();
             commandInput.setCommand(String.format("%s/bin/imkdir -p %s", irodsHome, ncgenesIRODSDirectory));
             commandInput.setWorkDir(tmpDir);
             commandInputList.add(commandInput);
