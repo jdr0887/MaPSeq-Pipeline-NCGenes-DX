@@ -211,8 +211,8 @@ public class NCGenesDXPipeline extends AbstractPipeline {
                         intervalListByVersionFile.getAbsolutePath());
                 String outputPrefix = bamFile.getName().replace(".bam", String.format(".coverage.v%s.gene", version));
                 gatkGeneDepthOfCoverageJob.addArgument(GATKDepthOfCoverageCLI.OUTPUTPREFIX, outputPrefix);
-                gatkGeneDepthOfCoverageJob.setPostScript(String.format("/bin/mv %s* %s", outputPrefix,
-                        outputDirectory.getAbsolutePath()));
+                gatkGeneDepthOfCoverageJob.setPostScript(String.format("/bin/mv %s/%s* %s", getSubmitDirectory()
+                        .getAbsolutePath(), outputPrefix, outputDirectory.getAbsolutePath()));
                 graph.addVertex(gatkGeneDepthOfCoverageJob);
 
                 // new job
