@@ -29,6 +29,7 @@ import edu.unc.mapseq.dao.model.FileData;
 import edu.unc.mapseq.dao.model.HTSFSample;
 import edu.unc.mapseq.dao.model.MimeType;
 import edu.unc.mapseq.dao.model.SequencerRun;
+import edu.unc.mapseq.dao.model.Workflow;
 import edu.unc.mapseq.module.core.ZipCLI;
 import edu.unc.mapseq.module.filter.FilterVariantCLI;
 import edu.unc.mapseq.module.gatk.GATKApplyRecalibration;
@@ -106,6 +107,13 @@ public class NCGenesDXPipeline extends AbstractPipeline {
         String referenceSequence = getPipelineBeanService().getAttributes().get("referenceSequence");
         String icSNPIntervalList = getPipelineBeanService().getAttributes().get("icSNPIntervalList");
 
+        Workflow ncgenesWorkflow = null;
+        try {
+            ncgenesWorkflow = getPipelineBeanService().getMaPSeqDAOBean().getWorkflowDAO().findByName("NCGenes");
+        } catch (MaPSeqDAOException e1) {
+            e1.printStackTrace();
+        }
+
         for (HTSFSample htsfSample : htsfSampleSet) {
 
             if ("Undetermined".equals(htsfSample.getBarcode())) {
@@ -156,9 +164,9 @@ public class NCGenesDXPipeline extends AbstractPipeline {
             File bamFile = null;
             File bamIndexFile = null;
 
-            List<File> potentialBAMFileList = PipelineUtil
-                    .lookupFileByJobAndMimeType(fileDataSet, getPipelineBeanService().getMaPSeqDAOBean(),
-                            GATKTableRecalibration.class, MimeType.APPLICATION_BAM);
+            List<File> potentialBAMFileList = PipelineUtil.lookupFileByJobAndMimeTypeAndWorkflowId(fileDataSet,
+                    getPipelineBeanService().getMaPSeqDAOBean(), GATKTableRecalibration.class,
+                    MimeType.APPLICATION_BAM, ncgenesWorkflow.getId());
 
             // assume that only one GATKTableRecalibration job exists
             if (potentialBAMFileList.size() > 0) {
@@ -170,8 +178,9 @@ public class NCGenesDXPipeline extends AbstractPipeline {
                 throw new PipelineException("bam file to process was not found");
             }
 
-            List<File> potentialBAMIndexFileList = PipelineUtil.lookupFileByJobAndMimeType(fileDataSet,
-                    getPipelineBeanService().getMaPSeqDAOBean(), SAMToolsIndex.class, MimeType.APPLICATION_BAM_INDEX);
+            List<File> potentialBAMIndexFileList = PipelineUtil.lookupFileByJobAndMimeTypeAndWorkflowId(fileDataSet,
+                    getPipelineBeanService().getMaPSeqDAOBean(), SAMToolsIndex.class, MimeType.APPLICATION_BAM_INDEX,
+                    ncgenesWorkflow.getId());
 
             if (potentialBAMIndexFileList.size() > 0) {
                 for (File file : potentialBAMIndexFileList) {
@@ -261,9 +270,9 @@ public class NCGenesDXPipeline extends AbstractPipeline {
                 graph.addEdge(picardSortSAMIndexJob, zipJob);
 
                 File gatkApplyRecalibrationOut = null;
-                List<File> potentialGATKApplyRecalibrationFileList = PipelineUtil.lookupFileByJobAndMimeType(
+                List<File> potentialGATKApplyRecalibrationFileList = PipelineUtil.lookupFileByJobAndMimeTypeAndWorkflowId(
                         fileDataSet, getPipelineBeanService().getMaPSeqDAOBean(), GATKApplyRecalibration.class,
-                        MimeType.TEXT_VCF);
+                        MimeType.TEXT_VCF, ncgenesWorkflow.getId());
                 // assume that only one GATKApplyRecalibrationCLI job exists
                 if (potentialGATKApplyRecalibrationFileList.size() > 0) {
                     gatkApplyRecalibrationOut = potentialGATKApplyRecalibrationFileList.get(0);
@@ -321,6 +330,13 @@ public class NCGenesDXPipeline extends AbstractPipeline {
         String dx = null;
         String version = null;
 
+        Workflow ncgenesWorkflow = null;
+        try {
+            ncgenesWorkflow = getPipelineBeanService().getMaPSeqDAOBean().getWorkflowDAO().findByName("NCGenes");
+        } catch (MaPSeqDAOException e1) {
+            e1.printStackTrace();
+        }
+
         for (HTSFSample htsfSample : htsfSampleSet) {
 
             if ("Undetermined".equals(htsfSample.getBarcode())) {
@@ -361,8 +377,8 @@ public class NCGenesDXPipeline extends AbstractPipeline {
             File bamFile = null;
 
             List<File> potentialBAMFileList = PipelineUtil
-                    .lookupFileByJobAndMimeType(fileDataSet, getPipelineBeanService().getMaPSeqDAOBean(),
-                            GATKTableRecalibration.class, MimeType.APPLICATION_BAM);
+                    .lookupFileByJobAndMimeTypeAndWorkflowId(fileDataSet, getPipelineBeanService().getMaPSeqDAOBean(),
+                            GATKTableRecalibration.class, MimeType.APPLICATION_BAM, ncgenesWorkflow.getId());
 
             // assume that only one GATKTableRecalibration job exists
             if (potentialBAMFileList.size() > 0) {
