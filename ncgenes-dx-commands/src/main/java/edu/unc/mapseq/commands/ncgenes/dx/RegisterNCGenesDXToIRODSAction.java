@@ -2,6 +2,7 @@ package edu.unc.mapseq.commands.ncgenes.dx;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
@@ -75,10 +76,8 @@ public class RegisterNCGenesDXToIRODSAction extends AbstractAction {
         File workflowDir = new File(sequencerRunOutputDirectory, "NCGenes");
         File outputDirectory = new File(workflowDir, htsfSample.getName());
         File tmpDir = new File(outputDirectory, "tmp");
-
-        if (!outputDirectory.exists()) {
-            System.err.println(String.format("%s doesn't exist", outputDirectory.getAbsolutePath()));
-            return null;
+        if (!tmpDir.exists()) {
+            tmpDir.mkdirs();
         }
 
         List<File> readPairList = PipelineUtil.getReadPairList(htsfSample.getFileDatas(), sequencerRun.getName(),
@@ -119,9 +118,10 @@ public class RegisterNCGenesDXToIRODSAction extends AbstractAction {
                 break;
         }
 
+        List<CommandInput> commandInputList = new LinkedList<CommandInput>();
+
         CommandOutput commandOutput = null;
 
-        List<CommandInput> commandInputList = new ArrayList<CommandInput>();
         CommandInput commandInput = new CommandInput();
         commandInput.setCommand(String.format("%s/bin/imkdir -p %s", irodsHome, ncgenesIRODSDirectory));
         commandInput.setWorkDir(tmpDir);

@@ -347,7 +347,9 @@ public class NCGenesDXPipeline extends AbstractPipeline {
             File outputDirectory = createOutputDirectory(sequencerRun.getName(), htsfSample, getName()
                     .replace("DX", ""));
             File tmpDir = new File(outputDirectory, "tmp");
-            tmpDir.mkdirs();
+            if (!tmpDir.exists()) {
+                tmpDir.mkdirs();
+            }
 
             Set<EntityAttribute> attributeSet = htsfSample.getAttributes();
             Iterator<EntityAttribute> attributeIter = attributeSet.iterator();
