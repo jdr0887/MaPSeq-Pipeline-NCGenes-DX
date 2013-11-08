@@ -122,7 +122,7 @@ public class NCGenesDXPipeline extends AbstractPipeline {
 
             SequencerRun sequencerRun = htsfSample.getSequencerRun();
             File outputDirectory = createOutputDirectory(sequencerRun.getName(), htsfSample, getName()
-                    .replace("DX", ""));
+                    .replace("DX", ""), getVersion());
 
             Set<EntityAttribute> attributeSet = htsfSample.getAttributes();
             Iterator<EntityAttribute> attributeIter = attributeSet.iterator();
@@ -345,7 +345,7 @@ public class NCGenesDXPipeline extends AbstractPipeline {
 
             SequencerRun sequencerRun = htsfSample.getSequencerRun();
             File outputDirectory = createOutputDirectory(sequencerRun.getName(), htsfSample, getName()
-                    .replace("DX", ""));
+                    .replace("DX", ""), getVersion());
             File tmpDir = new File(outputDirectory, "tmp");
             if (!tmpDir.exists()) {
                 tmpDir.mkdirs();
