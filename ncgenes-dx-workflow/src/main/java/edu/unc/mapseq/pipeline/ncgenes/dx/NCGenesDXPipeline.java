@@ -106,7 +106,7 @@ public class NCGenesDXPipeline extends AbstractPipeline {
         String siteName = getPipelineBeanService().getAttributes().get("siteName");
         String referenceSequence = getPipelineBeanService().getAttributes().get("referenceSequence");
         String icSNPIntervalList = getPipelineBeanService().getAttributes().get("icSNPIntervalList");
-
+        Boolean isIncidental = Boolean.FALSE;
         Workflow ncgenesWorkflow = null;
         try {
             ncgenesWorkflow = getPipelineBeanService().getMaPSeqDAOBean().getWorkflowDAO().findByName("NCGenes");
@@ -128,6 +128,9 @@ public class NCGenesDXPipeline extends AbstractPipeline {
             Iterator<EntityAttribute> attributeIter = attributeSet.iterator();
             while (attributeIter.hasNext()) {
                 EntityAttribute attribute = attributeIter.next();
+                if ("isIncidental".equals(attribute.getName())) {
+                    isIncidental = Boolean.TRUE;
+                }
                 if ("GATKDepthOfCoverage.interval_list.version".equals(attribute.getName())) {
                     version = attribute.getValue();
                 }
@@ -140,18 +143,18 @@ public class NCGenesDXPipeline extends AbstractPipeline {
                 throw new PipelineException("Both version and DX were null...returning empty dag");
             }
 
-            File intervalListByVersionFile = new File(String.format(
-                    "/proj/renci/sequence_analysis/annotation/abeast/NCGenes/%1$s/exons_pm_0_v%1$s.interval_list",
-                    version));
+            String format = "/proj/renci/sequence_analysis/annotation/abeast/NCGenes/%1$s/exons_pm_0_v%1$s.interval_list";
+            File intervalListByVersionFile = new File(String.format(format, version));
             if (!intervalListByVersionFile.exists()) {
                 throw new PipelineException("Interval list file does not exist: "
                         + intervalListByVersionFile.getAbsolutePath());
             }
 
-            File intervalListByDXAndVersionFile = new File(
-                    String.format(
-                            "/proj/renci/sequence_analysis/annotation/abeast/NCGenes/%2$s/genes_dxid_%1$s_v_%2$s.interval_list",
-                            dx, version));
+            format = "/proj/renci/sequence_analysis/annotation/abeast/NCGenes/%1$s/genes_dxid_%2$s_v_%1$s.interval_list";
+            if (isIncidental) {
+                format = "/proj/renci/sequence_analysis/annotation/abeast/NCGenes/Incidental/incidental_%2$s_%1$s.interval_list";
+            }
+            File intervalListByDXAndVersionFile = new File(String.format(format, version, dx));
             if (!intervalListByDXAndVersionFile.exists()) {
                 throw new PipelineException("Interval list file does not exist: "
                         + intervalListByDXAndVersionFile.getAbsolutePath());
@@ -270,9 +273,10 @@ public class NCGenesDXPipeline extends AbstractPipeline {
                 graph.addEdge(picardSortSAMIndexJob, zipJob);
 
                 File gatkApplyRecalibrationOut = null;
-                List<File> potentialGATKApplyRecalibrationFileList = PipelineUtil.lookupFileByJobAndMimeTypeAndWorkflowId(
-                        fileDataSet, getPipelineBeanService().getMaPSeqDAOBean(), GATKApplyRecalibration.class,
-                        MimeType.TEXT_VCF, ncgenesWorkflow.getId());
+                List<File> potentialGATKApplyRecalibrationFileList = PipelineUtil
+                        .lookupFileByJobAndMimeTypeAndWorkflowId(fileDataSet, getPipelineBeanService()
+                                .getMaPSeqDAOBean(), GATKApplyRecalibration.class, MimeType.TEXT_VCF, ncgenesWorkflow
+                                .getId());
                 // assume that only one GATKApplyRecalibrationCLI job exists
                 if (potentialGATKApplyRecalibrationFileList.size() > 0) {
                     gatkApplyRecalibrationOut = potentialGATKApplyRecalibrationFileList.get(0);
@@ -378,9 +382,9 @@ public class NCGenesDXPipeline extends AbstractPipeline {
 
             File bamFile = null;
 
-            List<File> potentialBAMFileList = PipelineUtil
-                    .lookupFileByJobAndMimeTypeAndWorkflowId(fileDataSet, getPipelineBeanService().getMaPSeqDAOBean(),
-                            GATKTableRecalibration.class, MimeType.APPLICATION_BAM, ncgenesWorkflow.getId());
+            List<File> potentialBAMFileList = PipelineUtil.lookupFileByJobAndMimeTypeAndWorkflowId(fileDataSet,
+                    getPipelineBeanService().getMaPSeqDAOBean(), GATKTableRecalibration.class,
+                    MimeType.APPLICATION_BAM, ncgenesWorkflow.getId());
 
             // assume that only one GATKTableRecalibration job exists
             if (potentialBAMFileList.size() > 0) {
