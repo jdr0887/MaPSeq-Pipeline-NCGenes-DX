@@ -8,7 +8,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.unc.mapseq.pipelines</groupId>
   <artifactId>ncgenes-dx</artifactId>
-  <version>0.2.42-SNAPSHOT</version>
+  <version>0.2.42</version>
   <packaging>pom</packaging>
   <properties>
     <karaf.version>2.3.3</karaf.version>
@@ -45,7 +45,7 @@
   <scm>
     <developerConnection>scm:git:ssh://${user.name}@code.renci.org/gitroot/mps_ncg_dx_pl</developerConnection>
     <connection>scm:git:ssh://developername@code.renci.org/gitroot/mps_ncg_dx_pl</connection>
-    <tag>HEAD</tag>
+    <tag>ncgenes-dx-0.2.42</tag>
   </scm>
   <dependencyManagement>
     <dependencies>
@@ -72,7 +72,7 @@
       <dependency>
       	<groupId>edu.unc.mapseq.pipelines.ncgenes-dx</groupId>
       	<artifactId>ncgenes-dx-workflow</artifactId>
-      	<version>0.2.42-SNAPSHOT</version>
+      	<version>0.2.42</version>
       </dependency>
       <dependency>
       	<groupId>org.apache.activemq</groupId>
