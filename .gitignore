@@ -1,2 +1,2 @@
 target
-ncgenes-dx-workflow/src/main/resources/edu/unc/mapseq/pipeline/ncgenes/dx/pipeline.properties
+ncgenes-dx-workflow/src/main/resources/edu/unc/mapseq/workflow/ncgenes/dx/workflow.properties
