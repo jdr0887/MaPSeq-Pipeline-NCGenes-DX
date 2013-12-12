@@ -9,7 +9,7 @@ import javax.jms.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import edu.unc.mapseq.pipeline.PipelineBeanService;
+import edu.unc.mapseq.workflow.WorkflowBeanService;
 
 public class NCGenesDXMessagingService {
 
@@ -21,7 +21,7 @@ public class NCGenesDXMessagingService {
 
     private ConnectionFactory connectionFactory;
 
-    private PipelineBeanService pipelineBeanService;
+    private WorkflowBeanService workflowBeanService;
 
     private String destinationName;
 
@@ -36,7 +36,7 @@ public class NCGenesDXMessagingService {
         Destination destination = this.session.createQueue(this.destinationName);
         MessageConsumer consumer = this.session.createConsumer(destination);
         NCGenesDXMessageListener messageListener = new NCGenesDXMessageListener();
-        messageListener.setPipelineBeanService(pipelineBeanService);
+        messageListener.setWorkflowBeanService(workflowBeanService);
         consumer.setMessageListener(messageListener);
         this.connection.start();
 
@@ -61,12 +61,12 @@ public class NCGenesDXMessagingService {
         this.connectionFactory = connectionFactory;
     }
 
-    public PipelineBeanService getPipelineBeanService() {
-        return pipelineBeanService;
+    public WorkflowBeanService getWorkflowBeanService() {
+        return workflowBeanService;
     }
 
-    public void setPipelineBeanService(PipelineBeanService pipelineBeanService) {
-        this.pipelineBeanService = pipelineBeanService;
+    public void setWorkflowBeanService(WorkflowBeanService workflowBeanService) {
+        this.workflowBeanService = workflowBeanService;
     }
 
     public String getDestinationName() {
