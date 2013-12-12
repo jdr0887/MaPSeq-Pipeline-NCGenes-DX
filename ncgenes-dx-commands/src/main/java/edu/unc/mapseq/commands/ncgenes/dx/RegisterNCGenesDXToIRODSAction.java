@@ -23,8 +23,8 @@ import edu.unc.mapseq.dao.MaPSeqDAOBean;
 import edu.unc.mapseq.dao.MaPSeqDAOException;
 import edu.unc.mapseq.dao.model.HTSFSample;
 import edu.unc.mapseq.dao.model.SequencerRun;
-import edu.unc.mapseq.pipeline.IRODSBean;
-import edu.unc.mapseq.pipeline.PipelineUtil;
+import edu.unc.mapseq.workflow.IRODSBean;
+import edu.unc.mapseq.workflow.WorkflowUtil;
 
 @Command(scope = "ncgenes-dx", name = "register-to-irods", description = "Register a NCGenesDX sample output to iRODS")
 public class RegisterNCGenesDXToIRODSAction extends AbstractAction {
@@ -80,7 +80,7 @@ public class RegisterNCGenesDXToIRODSAction extends AbstractAction {
             tmpDir.mkdirs();
         }
 
-        List<File> readPairList = PipelineUtil.getReadPairList(htsfSample.getFileDatas(), sequencerRun.getName(),
+        List<File> readPairList = WorkflowUtil.getReadPairList(htsfSample.getFileDatas(), sequencerRun.getName(),
                 htsfSample.getLaneIndex());
 
         // assumption: a dash is used as a delimiter between a participantId and
@@ -90,10 +90,10 @@ public class RegisterNCGenesDXToIRODSAction extends AbstractAction {
 
         // File r1FastqFile = readPairList.get(0);
         // String r1FastqRootName =
-        // PipelineUtil.getRootFastqName(r1FastqFile.getName());
+        // WorkflowUtil.getRootFastqName(r1FastqFile.getName());
 
         File r2FastqFile = readPairList.get(1);
-        String r2FastqRootName = PipelineUtil.getRootFastqName(r2FastqFile.getName());
+        String r2FastqRootName = WorkflowUtil.getRootFastqName(r2FastqFile.getName());
 
         String fastqLaneRootName = StringUtils.removeEnd(r2FastqRootName, "_R2");
 
