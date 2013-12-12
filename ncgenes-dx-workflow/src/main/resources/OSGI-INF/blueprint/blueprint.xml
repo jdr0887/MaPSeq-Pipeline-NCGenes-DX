@@ -2,7 +2,7 @@
 <blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0" default-activation="eager">
 
-  <cm:property-placeholder persistent-id="edu.unc.mapseq.pipeline.ncgenes.dx" update-strategy="reload">
+  <cm:property-placeholder persistent-id="edu.unc.mapseq.workflow.ncgenes.dx" update-strategy="reload">
     <cm:default-properties>
       <cm:property name="corePoolSize" value="100" />
       <cm:property name="maxPoolSize" value="100" />
@@ -40,7 +40,7 @@
     <property name="workflowRunDAO" ref="workflowRunDAO" />
   </bean>
 
-  <bean id="NCGenesDXPipelineBeanService" class="edu.unc.mapseq.pipeline.PipelineBeanServiceImpl">
+  <bean id="NCGenesDXWorkflowBeanService" class="edu.unc.mapseq.workflow.WorkflowBeanServiceImpl">
     <property name="corePoolSize" value="${corePoolSize}" />
     <property name="maxPoolSize" value="${maxPoolSize}" />
     <property name="maPSeqConfigurationService" ref="maPSeqConfigurationService" />
@@ -52,9 +52,9 @@
         <entry key="siteName" value="${siteName}" />
       </map>
     </property>
-    <cm:managed-properties persistent-id="edu.unc.mapseq.pipeline.ncgenes.dx" update-strategy="container-managed" />
+    <cm:managed-properties persistent-id="edu.unc.mapseq.workflow.ncgenes.dx" update-strategy="container-managed" />
   </bean>
 
-  <service ref="NCGenesDXPipelineBeanService" interface="edu.unc.mapseq.pipeline.PipelineBeanService" />
+  <service ref="NCGenesDXWorkflowBeanService" interface="edu.unc.mapseq.workflow.WorkflowBeanService" />
 
 </blueprint>
