@@ -13,7 +13,7 @@
   <dependencies>
     <dependency>
       <groupId>edu.unc.mapseq</groupId>
-      <artifactId>mapseq-pipeline-api</artifactId>
+      <artifactId>mapseq-workflow-api</artifactId>
     </dependency>
     <dependency>
       <groupId>edu.unc.mapseq</groupId>
@@ -30,9 +30,9 @@
             <phase>validate</phase>
             <configuration>
               <tasks>
-                <delete file="${basedir}/src/main/resources/edu/unc/mapseq/pipeline/ncgenes/dx/pipeline.properties" />
-                <touch file="${basedir}/src/main/resources/edu/unc/mapseq/pipeline/ncgenes/dx/pipeline.properties" mkdirs="true" />
-                <echo file="${basedir}/src/main/resources/edu/unc/mapseq/pipeline/ncgenes/dx/pipeline.properties" append="true">
+                <delete file="${basedir}/src/main/resources/edu/unc/mapseq/workflow/ncgenes/dx/workflow.properties" />
+                <touch file="${basedir}/src/main/resources/edu/unc/mapseq/workflow/ncgenes/dx/workflow.properties" mkdirs="true" />
+                <echo file="${basedir}/src/main/resources/edu/unc/mapseq/workflow/ncgenes/dx/workflow.properties" append="true">
                   version=${project.version}
                 </echo>
               </tasks>
@@ -49,7 +49,7 @@
         <configuration>
           <instructions>
             <Private-Package />
-            <Export-Package>edu.unc.mapseq.pipeline.ncgenes.dx*</Export-Package>
+            <Export-Package>edu.unc.mapseq.workflow.ncgenes.dx*</Export-Package>
             <Import-Package>*</Import-Package>
           </instructions>
         </configuration>
