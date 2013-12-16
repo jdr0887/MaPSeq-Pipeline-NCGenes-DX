@@ -284,4 +284,20 @@ public class RegisterNCGenesDXToIRODSAction extends AbstractAction {
         this.htsfSampleId = htsfSampleId;
     }
 
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
+    }
+
+    public String getDx() {
+        return dx;
+    }
+
+    public void setDx(String dx) {
+        this.dx = dx;
+    }
+
 }
