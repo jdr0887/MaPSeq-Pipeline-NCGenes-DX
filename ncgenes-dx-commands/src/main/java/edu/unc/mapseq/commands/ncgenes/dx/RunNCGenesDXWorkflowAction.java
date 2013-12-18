@@ -11,6 +11,9 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.felix.gogo.commands.Argument;
 import org.apache.felix.gogo.commands.Command;
 import org.apache.karaf.shell.console.AbstractAction;
+import org.codehaus.jettison.json.JSONArray;
+import org.codehaus.jettison.json.JSONException;
+import org.codehaus.jettison.json.JSONObject;
 
 import edu.unc.mapseq.config.MaPSeqConfigurationService;
 import edu.unc.mapseq.dao.MaPSeqDAOBean;
@@ -20,6 +23,9 @@ public class RunNCGenesDXWorkflowAction extends AbstractAction {
 
     @Argument(index = 0, name = "workflowRunName", description = "WorkflowRun.name", required = true, multiValued = false)
     private String workflowRunName;
+
+    @Argument(index = 1, name = "htsfSampleId", description = "htsfSampleId", required = true, multiValued = false)
+    private Long htsfSampleId;
 
     private MaPSeqDAOBean maPSeqDAOBean;
 
@@ -42,11 +48,21 @@ public class RunNCGenesDXWorkflowAction extends AbstractAction {
             session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             Destination destination = session.createQueue("queue/ncgenes.dx");
             MessageProducer producer = session.createProducer(destination);
-            producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-            String format = "{\"account_name\":\"%s\",\"entities\":[{\"entity_type\":\"WorkflowRun\",\"name\":\"%s\"}]}";
-            producer.send(session.createTextMessage(String.format(format, System.getProperty("user.name"),
-                    workflowRunName)));
-        } catch (JMSException e) {
+            producer.setDeliveryMode(DeliveryMode.PERSISTENT);
+            JSONObject parentJSONObject = new JSONObject();
+            parentJSONObject.put("account_name", System.getProperty("user.name"));
+            JSONArray entityArray = new JSONArray();
+            JSONObject entityType = new JSONObject();
+            entityType.put("entity_type", "HTSFSample");
+            entityType.put("guid", htsfSampleId);
+            entityArray.put(entityType);
+            entityType = new JSONObject();
+            entityType.put("entity_type", "WorkflowRun");
+            entityType.put("name", workflowRunName);
+            entityArray.put(entityType);
+            parentJSONObject.put("entities", entityArray);
+            producer.send(session.createTextMessage(parentJSONObject.toString()));
+        } catch (JSONException | JMSException e) {
             e.printStackTrace();
         } finally {
             try {
@@ -58,6 +74,14 @@ public class RunNCGenesDXWorkflowAction extends AbstractAction {
         }
 
         return null;
+    }
+
+    public Long getHtsfSampleId() {
+        return htsfSampleId;
+    }
+
+    public void setHtsfSampleId(Long htsfSampleId) {
+        this.htsfSampleId = htsfSampleId;
     }
 
     public String getWorkflowRunName() {
