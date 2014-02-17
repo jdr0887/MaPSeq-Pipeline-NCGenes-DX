@@ -74,7 +74,8 @@ public class RegisterNCGenesDXToIRODSAction extends AbstractAction {
 
         File sequencerRunOutputDirectory = new File(baseDir, sequencerRun.getName());
         File workflowDir = new File(sequencerRunOutputDirectory, "NCGenes");
-        File outputDirectory = new File(workflowDir, htsfSample.getName());
+        File outputDirectory = new File(workflowDir, String.format("L%03d_%s", htsfSample.getLaneIndex(),
+                htsfSample.getBarcode()));
         File tmpDir = new File(outputDirectory, "tmp");
         if (!tmpDir.exists()) {
             tmpDir.mkdirs();
