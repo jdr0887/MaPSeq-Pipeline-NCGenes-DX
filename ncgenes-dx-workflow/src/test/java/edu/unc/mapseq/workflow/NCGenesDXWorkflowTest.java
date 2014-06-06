@@ -8,9 +8,10 @@ import org.jgrapht.DirectedGraph;
 import org.jgrapht.ext.VertexNameProvider;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.junit.Test;
-import org.renci.jlrm.condor.ext.CondorDOTExporter;
 import org.renci.jlrm.condor.CondorJob;
+import org.renci.jlrm.condor.CondorJobBuilder;
 import org.renci.jlrm.condor.CondorJobEdge;
+import org.renci.jlrm.condor.ext.CondorDOTExporter;
 
 import edu.unc.mapseq.module.core.ZipCLI;
 import edu.unc.mapseq.module.filter.FilterVariantCLI;
@@ -30,40 +31,41 @@ public class NCGenesDXWorkflowTest {
         int count = 0;
 
         // new job
-        CondorJob gatkGeneDepthOfCoverageJob = new CondorJob(String.format("%s_%d",
-                GATKDepthOfCoverageCLI.class.getSimpleName(), ++count), null);
+        CondorJob gatkGeneDepthOfCoverageJob = new CondorJobBuilder().name(
+                String.format("%s_%d", GATKDepthOfCoverageCLI.class.getSimpleName(), ++count)).build();
         graph.addVertex(gatkGeneDepthOfCoverageJob);
 
         // new job
-        CondorJob samtoolsViewJob = new CondorJob(
-                String.format("%s_%d", SAMToolsViewCLI.class.getSimpleName(), ++count), null);
+        CondorJob samtoolsViewJob = new CondorJobBuilder().name(
+                String.format("%s_%d", SAMToolsViewCLI.class.getSimpleName(), ++count)).build();
         graph.addVertex(samtoolsViewJob);
 
         // new job
-        CondorJob picardSortSAMJob = new CondorJob(String.format("%s_%d", PicardSortSAMCLI.class.getSimpleName(),
-                ++count), null);
+        CondorJob picardSortSAMJob = new CondorJobBuilder().name(
+                String.format("%s_%d", PicardSortSAMCLI.class.getSimpleName(), ++count)).build();
         graph.addVertex(picardSortSAMJob);
         graph.addEdge(samtoolsViewJob, picardSortSAMJob);
 
         // new job
-        CondorJob picardSortSAMIndexJob = new CondorJob(String.format("%s_%d", SAMToolsIndexCLI.class.getSimpleName(),
-                ++count), null);
+        CondorJob picardSortSAMIndexJob = new CondorJobBuilder().name(
+                String.format("%s_%d", SAMToolsIndexCLI.class.getSimpleName(), ++count)).build();
         graph.addVertex(picardSortSAMIndexJob);
         graph.addEdge(picardSortSAMJob, picardSortSAMIndexJob);
 
         // new job
-        CondorJob zipJob = new CondorJob(String.format("%s_%d", ZipCLI.class.getSimpleName(), ++count), null);
+        CondorJob zipJob = new CondorJobBuilder().name(String.format("%s_%d", ZipCLI.class.getSimpleName(), ++count))
+                .build();
         graph.addVertex(zipJob);
         graph.addEdge(picardSortSAMIndexJob, zipJob);
 
         // new job
-        CondorJob filterVariant2Job = new CondorJob(String.format("%s_%d", FilterVariantCLI.class.getSimpleName(),
-                ++count), null);
+        CondorJob filterVariant2Job = new CondorJobBuilder().name(
+                String.format("%s_%d", FilterVariantCLI.class.getSimpleName(), ++count)).build();
         graph.addVertex(filterVariant2Job);
 
         // new job
-        CondorJob filterVariant3Job = new CondorJob(String.format("%s_%d", FilterVariantCLI.class.getSimpleName(),
-                ++count), null);
+        CondorJob filterVariant3Job = new CondorJobBuilder().name(
+                String.format("%s_%d", FilterVariantCLI.class.getSimpleName(), ++count)).build();
         graph.addVertex(filterVariant3Job);
 
         VertexNameProvider<CondorJob> vnpId = new VertexNameProvider<CondorJob>() {
