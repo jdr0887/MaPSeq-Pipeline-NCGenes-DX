@@ -27,6 +27,11 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
+      <groupId>edu.unc.mapseq.distribution</groupId>
+      <artifactId>mapseq-workflow-impl</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
       <groupId>org.renci.commons</groupId>
       <artifactId>commons-exec</artifactId>
       <scope>provided</scope>
