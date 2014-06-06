@@ -17,6 +17,7 @@ import org.renci.common.exec.CommandOutput;
 import org.renci.common.exec.Executor;
 import org.renci.common.exec.ExecutorException;
 import org.renci.jlrm.condor.CondorJob;
+import org.renci.jlrm.condor.CondorJobBuilder;
 import org.renci.jlrm.condor.CondorJobEdge;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,11 +42,11 @@ import edu.unc.mapseq.module.picard.PicardSortSAMCLI;
 import edu.unc.mapseq.module.samtools.SAMToolsIndex;
 import edu.unc.mapseq.module.samtools.SAMToolsIndexCLI;
 import edu.unc.mapseq.module.samtools.SAMToolsViewCLI;
-import edu.unc.mapseq.workflow.AbstractWorkflow;
-import edu.unc.mapseq.workflow.IRODSBean;
 import edu.unc.mapseq.workflow.WorkflowException;
-import edu.unc.mapseq.workflow.WorkflowJobFactory;
 import edu.unc.mapseq.workflow.WorkflowUtil;
+import edu.unc.mapseq.workflow.impl.AbstractWorkflow;
+import edu.unc.mapseq.workflow.impl.IRODSBean;
+import edu.unc.mapseq.workflow.impl.WorkflowJobFactory;
 
 public class NCGenesDXWorkflow extends AbstractWorkflow {
 
@@ -181,73 +182,75 @@ public class NCGenesDXWorkflow extends AbstractWorkflow {
             try {
 
                 // new job
-                CondorJob gatkGeneDepthOfCoverageJob = WorkflowJobFactory.createJob(++count,
-                        GATKDepthOfCoverageCLI.class, getWorkflowPlan(), htsfSample);
-                gatkGeneDepthOfCoverageJob.setSiteName(siteName);
-                gatkGeneDepthOfCoverageJob.addArgument(GATKDepthOfCoverageCLI.PHONEHOME,
-                        GATKPhoneHomeType.NO_ET.toString());
-                gatkGeneDepthOfCoverageJob.addArgument(GATKDepthOfCoverageCLI.WORKDIRECTORY,
-                        outputDirectory.getAbsolutePath());
-                gatkGeneDepthOfCoverageJob.addArgument(GATKDepthOfCoverageCLI.DOWNSAMPLINGTYPE,
-                        GATKDownsamplingType.NONE.toString());
-                gatkGeneDepthOfCoverageJob.addArgument(GATKDepthOfCoverageCLI.INTERVALMERGING, "OVERLAPPING_ONLY");
-                gatkGeneDepthOfCoverageJob.addArgument(GATKDepthOfCoverageCLI.REFERENCESEQUENCE, referenceSequence);
-                gatkGeneDepthOfCoverageJob.addArgument(GATKDepthOfCoverageCLI.VALIDATIONSTRICTNESS, "LENIENT");
-                gatkGeneDepthOfCoverageJob.addArgument(GATKDepthOfCoverageCLI.OMITDEPTHOUTPUTATEACHBASE);
+                CondorJobBuilder builder = WorkflowJobFactory.createJob(++count, GATKDepthOfCoverageCLI.class,
+                        getWorkflowPlan(), htsfSample).siteName(siteName);
+                String outputPrefix = bamFile.getName().replace(".bam", String.format(".coverage.v%s.gene", version));
+                builder.addArgument(GATKDepthOfCoverageCLI.PHONEHOME, GATKPhoneHomeType.NO_ET.toString())
+                        .addArgument(GATKDepthOfCoverageCLI.WORKDIRECTORY, outputDirectory.getAbsolutePath())
+                        .addArgument(GATKDepthOfCoverageCLI.DOWNSAMPLINGTYPE, GATKDownsamplingType.NONE.toString())
+                        .addArgument(GATKDepthOfCoverageCLI.INTERVALMERGING, "OVERLAPPING_ONLY")
+                        .addArgument(GATKDepthOfCoverageCLI.REFERENCESEQUENCE, referenceSequence)
+                        .addArgument(GATKDepthOfCoverageCLI.VALIDATIONSTRICTNESS, "LENIENT")
+                        .addArgument(GATKDepthOfCoverageCLI.OMITDEPTHOUTPUTATEACHBASE)
+                        .addArgument(GATKDepthOfCoverageCLI.INPUTFILE, bamFile.getAbsolutePath())
+                        .addArgument(GATKDepthOfCoverageCLI.INTERVALS, intervalListByVersionFile.getAbsolutePath())
+                        .addArgument(GATKDepthOfCoverageCLI.OUTPUTPREFIX, outputPrefix);
                 if (summaryCoverageThreshold.contains(",")) {
                     for (String sct : StringUtils.split(summaryCoverageThreshold, ",")) {
-                        gatkGeneDepthOfCoverageJob.addArgument(GATKDepthOfCoverageCLI.SUMMARYCOVERAGETHRESHOLD, sct);
+                        builder.addArgument(GATKDepthOfCoverageCLI.SUMMARYCOVERAGETHRESHOLD, sct);
                     }
                 }
-                gatkGeneDepthOfCoverageJob.addArgument(GATKDepthOfCoverageCLI.INPUTFILE, bamFile.getAbsolutePath());
-                gatkGeneDepthOfCoverageJob.addArgument(GATKDepthOfCoverageCLI.INTERVALS,
-                        intervalListByVersionFile.getAbsolutePath());
-                String outputPrefix = bamFile.getName().replace(".bam", String.format(".coverage.v%s.gene", version));
-                gatkGeneDepthOfCoverageJob.addArgument(GATKDepthOfCoverageCLI.OUTPUTPREFIX, outputPrefix);
+                CondorJob gatkGeneDepthOfCoverageJob = builder.build();
+                logger.info(gatkGeneDepthOfCoverageJob.toString());
                 graph.addVertex(gatkGeneDepthOfCoverageJob);
 
                 // new job
-                CondorJob samtoolsViewJob = WorkflowJobFactory.createJob(++count, SAMToolsViewCLI.class,
-                        getWorkflowPlan(), htsfSample);
-                samtoolsViewJob.setSiteName(siteName);
-                samtoolsViewJob.addArgument(SAMToolsViewCLI.BAMFORMAT);
+                builder = WorkflowJobFactory.createJob(++count, SAMToolsViewCLI.class, getWorkflowPlan(), htsfSample)
+                        .siteName(siteName);
                 File samtoolsViewOutput = new File(outputDirectory, bamFile.getName().replace(".bam", ".filtered.bam"));
-                samtoolsViewJob.addArgument(SAMToolsViewCLI.OUTPUT, samtoolsViewOutput.getAbsolutePath());
-                samtoolsViewJob.addArgument(SAMToolsViewCLI.REGIONSFILE,
-                        intervalListByDXAndVersionFile.getAbsolutePath());
-                samtoolsViewJob.addArgument(SAMToolsViewCLI.INPUT, bamFile.getAbsolutePath());
+                builder.addArgument(SAMToolsViewCLI.BAMFORMAT)
+                        .addArgument(SAMToolsViewCLI.OUTPUT, samtoolsViewOutput.getAbsolutePath())
+                        .addArgument(SAMToolsViewCLI.REGIONSFILE, intervalListByDXAndVersionFile.getAbsolutePath())
+                        .addArgument(SAMToolsViewCLI.INPUT, bamFile.getAbsolutePath());
+                CondorJob samtoolsViewJob = builder.build();
+                logger.info(samtoolsViewJob.toString());
                 graph.addVertex(samtoolsViewJob);
 
-                CondorJob picardSortSAMJob = WorkflowJobFactory.createJob(++count, PicardSortSAMCLI.class,
-                        getWorkflowPlan(), htsfSample);
-                picardSortSAMJob.setSiteName(siteName);
-                picardSortSAMJob.addArgument(PicardSortSAMCLI.INPUT, samtoolsViewOutput.getAbsolutePath());
+                // new job
+                builder = WorkflowJobFactory.createJob(++count, PicardSortSAMCLI.class, getWorkflowPlan(), htsfSample)
+                        .siteName(siteName);
                 File picardSortOutput = new File(outputDirectory, samtoolsViewOutput.getName().replace(".bam",
                         String.format(".sorted.filtered_by_dxid_%s_v%s.bam", dx, version)));
-                picardSortSAMJob.addArgument(PicardSortSAMCLI.OUTPUT, picardSortOutput.getAbsolutePath());
-                picardSortSAMJob.addArgument(PicardSortSAMCLI.SORTORDER, PicardSortOrderType.COORDINATE.toString()
-                        .toLowerCase());
+                builder.addArgument(PicardSortSAMCLI.INPUT, samtoolsViewOutput.getAbsolutePath())
+                        .addArgument(PicardSortSAMCLI.OUTPUT, picardSortOutput.getAbsolutePath())
+                        .addArgument(PicardSortSAMCLI.SORTORDER,
+                                PicardSortOrderType.COORDINATE.toString().toLowerCase());
+                CondorJob picardSortSAMJob = builder.build();
+                logger.info(picardSortSAMJob.toString());
                 graph.addVertex(picardSortSAMJob);
                 graph.addEdge(samtoolsViewJob, picardSortSAMJob);
 
                 // new job
-                CondorJob picardSortSAMIndexJob = WorkflowJobFactory.createJob(++count, SAMToolsIndexCLI.class,
-                        getWorkflowPlan(), htsfSample);
-                picardSortSAMIndexJob.setSiteName(siteName);
-                picardSortSAMIndexJob.addArgument(SAMToolsIndexCLI.INPUT, picardSortOutput.getAbsolutePath());
+                builder = WorkflowJobFactory.createJob(++count, SAMToolsIndexCLI.class, getWorkflowPlan(), htsfSample)
+                        .siteName(siteName);
                 File picardSortSAMIndexOut = new File(outputDirectory, picardSortOutput.getName().replace(".bam",
                         ".bai"));
-                picardSortSAMIndexJob.addArgument(SAMToolsIndexCLI.OUTPUT, picardSortSAMIndexOut.getAbsolutePath());
+                builder.addArgument(SAMToolsIndexCLI.INPUT, picardSortOutput.getAbsolutePath()).addArgument(
+                        SAMToolsIndexCLI.OUTPUT, picardSortSAMIndexOut.getAbsolutePath());
+                CondorJob picardSortSAMIndexJob = builder.build();
+                logger.info(picardSortSAMIndexJob.toString());
                 graph.addVertex(picardSortSAMIndexJob);
                 graph.addEdge(picardSortSAMJob, picardSortSAMIndexJob);
 
                 // new job
-                CondorJob zipJob = WorkflowJobFactory.createJob(++count, ZipCLI.class, getWorkflowPlan(), htsfSample);
-                zipJob.setSiteName(siteName);
-                zipJob.addArgument(ZipCLI.ENTRY, picardSortOutput.getAbsolutePath());
-                zipJob.addArgument(ZipCLI.ENTRY, picardSortSAMIndexOut.getAbsolutePath());
+                builder = WorkflowJobFactory.createJob(++count, ZipCLI.class, getWorkflowPlan(), htsfSample).siteName(
+                        siteName);
                 File zipOutputFile = new File(outputDirectory, picardSortOutput.getName().replace(".bam", ".zip"));
-                zipJob.addArgument(ZipCLI.OUTPUT, zipOutputFile.getAbsolutePath());
+                builder.addArgument(ZipCLI.ENTRY, picardSortOutput.getAbsolutePath())
+                        .addArgument(ZipCLI.ENTRY, picardSortSAMIndexOut.getAbsolutePath())
+                        .addArgument(ZipCLI.OUTPUT, zipOutputFile.getAbsolutePath());
+                CondorJob zipJob = builder.build();
+                logger.info(zipJob.toString());
                 graph.addVertex(zipJob);
                 graph.addEdge(picardSortSAMIndexJob, zipJob);
 
@@ -267,15 +270,15 @@ public class NCGenesDXWorkflow extends AbstractWorkflow {
                 }
 
                 // new job
-                CondorJob filterVariantJob = WorkflowJobFactory.createJob(++count, FilterVariantCLI.class,
-                        getWorkflowPlan(), htsfSample);
-                filterVariantJob.setSiteName(siteName);
-                filterVariantJob.addArgument(FilterVariantCLI.INTERVALLIST,
-                        intervalListByDXAndVersionFile.getAbsolutePath());
-                filterVariantJob.addArgument(FilterVariantCLI.INPUT, gatkApplyRecalibrationOut.getAbsolutePath());
+                builder = WorkflowJobFactory.createJob(++count, FilterVariantCLI.class, getWorkflowPlan(), htsfSample)
+                        .siteName(siteName);
                 File filterVariantOutput = new File(outputDirectory, bamFile.getName().replace(".bam",
                         String.format(".filtered_by_dxid_%s_v%s.vcf", dx, version)));
-                filterVariantJob.addArgument(FilterVariantCLI.OUTPUT, filterVariantOutput.getAbsolutePath());
+                builder.addArgument(FilterVariantCLI.INTERVALLIST, intervalListByDXAndVersionFile.getAbsolutePath())
+                        .addArgument(FilterVariantCLI.INPUT, gatkApplyRecalibrationOut.getAbsolutePath())
+                        .addArgument(FilterVariantCLI.OUTPUT, filterVariantOutput.getAbsolutePath());
+                CondorJob filterVariantJob = builder.build();
+                logger.info(filterVariantJob.toString());
                 graph.addVertex(filterVariantJob);
 
             } catch (Exception e) {
