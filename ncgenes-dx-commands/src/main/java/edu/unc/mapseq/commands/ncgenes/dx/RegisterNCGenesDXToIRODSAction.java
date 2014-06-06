@@ -23,8 +23,8 @@ import edu.unc.mapseq.dao.MaPSeqDAOBean;
 import edu.unc.mapseq.dao.MaPSeqDAOException;
 import edu.unc.mapseq.dao.model.HTSFSample;
 import edu.unc.mapseq.dao.model.SequencerRun;
-import edu.unc.mapseq.workflow.IRODSBean;
 import edu.unc.mapseq.workflow.WorkflowUtil;
+import edu.unc.mapseq.workflow.impl.IRODSBean;
 
 @Command(scope = "ncgenes-dx", name = "register-to-irods", description = "Register a NCGenesDX sample output to iRODS")
 public class RegisterNCGenesDXToIRODSAction extends AbstractAction {
