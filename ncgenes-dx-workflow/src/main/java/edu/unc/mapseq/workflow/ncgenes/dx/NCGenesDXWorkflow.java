@@ -30,6 +30,7 @@ import edu.unc.mapseq.dao.model.HTSFSample;
 import edu.unc.mapseq.dao.model.MimeType;
 import edu.unc.mapseq.dao.model.SequencerRun;
 import edu.unc.mapseq.dao.model.Workflow;
+import edu.unc.mapseq.dao.model.WorkflowRun;
 import edu.unc.mapseq.module.core.ZipCLI;
 import edu.unc.mapseq.module.filter.FilterVariantCLI;
 import edu.unc.mapseq.module.gatk.GATKApplyRecalibration;
@@ -94,6 +95,8 @@ public class NCGenesDXWorkflow extends AbstractWorkflow {
             e1.printStackTrace();
         }
 
+        WorkflowRun workflowRun = getWorkflowPlan().getWorkflowRun();
+
         for (HTSFSample htsfSample : htsfSampleSet) {
 
             if ("Undetermined".equals(htsfSample.getBarcode())) {
@@ -104,21 +107,22 @@ public class NCGenesDXWorkflow extends AbstractWorkflow {
             File outputDirectory = createOutputDirectory(sequencerRun.getName(), htsfSample, getName()
                     .replace("DX", ""), getVersion());
 
-            Set<EntityAttribute> attributeSet = htsfSample.getAttributes();
-            Iterator<EntityAttribute> attributeIter = attributeSet.iterator();
-            while (attributeIter.hasNext()) {
-                EntityAttribute attribute = attributeIter.next();
-                if ("isIncidental".equals(attribute.getName())) {
-                    isIncidental = Boolean.TRUE;
-                }
-                if ("GATKDepthOfCoverage.interval_list.version".equals(attribute.getName())) {
-                    version = attribute.getValue();
-                }
-                if ("SAMToolsView.dx.id".equals(attribute.getName())) {
-                    dx = attribute.getValue();
+            Set<EntityAttribute> attributeSet = workflowRun.getAttributes();
+            if (attributeSet != null && !attributeSet.isEmpty()) {
+                Iterator<EntityAttribute> attributeIter = attributeSet.iterator();
+                while (attributeIter.hasNext()) {
+                    EntityAttribute attribute = attributeIter.next();
+                    if ("isIncidental".equals(attribute.getName())) {
+                        isIncidental = Boolean.TRUE;
+                    }
+                    if ("GATKDepthOfCoverage.interval_list.version".equals(attribute.getName())) {
+                        version = attribute.getValue();
+                    }
+                    if ("SAMToolsView.dx.id".equals(attribute.getName())) {
+                        dx = attribute.getValue();
+                    }
                 }
             }
-
             if (version == null || dx == null) {
                 throw new WorkflowException("Both version and DX were null...returning empty dag");
             }
@@ -309,6 +313,8 @@ public class NCGenesDXWorkflow extends AbstractWorkflow {
             e1.printStackTrace();
         }
 
+        WorkflowRun workflowRun = getWorkflowPlan().getWorkflowRun();
+
         for (HTSFSample htsfSample : htsfSampleSet) {
 
             if ("Undetermined".equals(htsfSample.getBarcode())) {
@@ -323,18 +329,19 @@ public class NCGenesDXWorkflow extends AbstractWorkflow {
                 tmpDir.mkdirs();
             }
 
-            Set<EntityAttribute> attributeSet = htsfSample.getAttributes();
-            Iterator<EntityAttribute> attributeIter = attributeSet.iterator();
-            while (attributeIter.hasNext()) {
-                EntityAttribute attribute = attributeIter.next();
-                if ("GATKDepthOfCoverage.interval_list.version".equals(attribute.getName())) {
-                    version = attribute.getValue();
-                }
-                if ("SAMToolsView.dx.id".equals(attribute.getName())) {
-                    dx = attribute.getValue();
+            Set<EntityAttribute> attributeSet = workflowRun.getAttributes();
+            if (attributeSet != null && !attributeSet.isEmpty()) {
+                Iterator<EntityAttribute> attributeIter = attributeSet.iterator();
+                while (attributeIter.hasNext()) {
+                    EntityAttribute attribute = attributeIter.next();
+                    if ("GATKDepthOfCoverage.interval_list.version".equals(attribute.getName())) {
+                        version = attribute.getValue();
+                    }
+                    if ("SAMToolsView.dx.id".equals(attribute.getName())) {
+                        dx = attribute.getValue();
+                    }
                 }
             }
-
             if (version == null && dx == null) {
                 logger.warn("Both version and DX were null...returning empty dag");
                 return;
