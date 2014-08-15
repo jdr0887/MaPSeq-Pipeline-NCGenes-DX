@@ -24,13 +24,13 @@ import org.slf4j.LoggerFactory;
 
 import edu.unc.mapseq.config.RunModeType;
 import edu.unc.mapseq.dao.MaPSeqDAOException;
-import edu.unc.mapseq.dao.model.EntityAttribute;
+import edu.unc.mapseq.dao.model.Attribute;
 import edu.unc.mapseq.dao.model.FileData;
-import edu.unc.mapseq.dao.model.HTSFSample;
 import edu.unc.mapseq.dao.model.MimeType;
-import edu.unc.mapseq.dao.model.SequencerRun;
+import edu.unc.mapseq.dao.model.Sample;
 import edu.unc.mapseq.dao.model.Workflow;
 import edu.unc.mapseq.dao.model.WorkflowRun;
+import edu.unc.mapseq.dao.model.WorkflowRunAttempt;
 import edu.unc.mapseq.module.core.ZipCLI;
 import edu.unc.mapseq.module.filter.FilterVariantCLI;
 import edu.unc.mapseq.module.gatk.GATKApplyRecalibration;
@@ -45,11 +45,11 @@ import edu.unc.mapseq.module.samtools.SAMToolsIndexCLI;
 import edu.unc.mapseq.module.samtools.SAMToolsViewCLI;
 import edu.unc.mapseq.workflow.WorkflowException;
 import edu.unc.mapseq.workflow.WorkflowUtil;
-import edu.unc.mapseq.workflow.impl.AbstractWorkflow;
+import edu.unc.mapseq.workflow.impl.AbstractSampleWorkflow;
 import edu.unc.mapseq.workflow.impl.IRODSBean;
 import edu.unc.mapseq.workflow.impl.WorkflowJobFactory;
 
-public class NCGenesDXWorkflow extends AbstractWorkflow {
+public class NCGenesDXWorkflow extends AbstractSampleWorkflow {
 
     private final Logger logger = LoggerFactory.getLogger(NCGenesDXWorkflow.class);
 
@@ -81,8 +81,8 @@ public class NCGenesDXWorkflow extends AbstractWorkflow {
         String dx = null;
         String summaryCoverageThreshold = "1,2,5,8,10,15,20,30,50";
 
-        Set<HTSFSample> htsfSampleSet = getAggregateHTSFSampleSet();
-        logger.info("htsfSampleSet.size(): {}", htsfSampleSet.size());
+        Set<Sample> sampleSet = getAggregatedSamples();
+        logger.info("sampleSet.size(): {}", sampleSet.size());
 
         String siteName = getWorkflowBeanService().getAttributes().get("siteName");
         String referenceSequence = getWorkflowBeanService().getAttributes().get("referenceSequence");
@@ -95,23 +95,24 @@ public class NCGenesDXWorkflow extends AbstractWorkflow {
             e1.printStackTrace();
         }
 
-        WorkflowRun workflowRun = getWorkflowPlan().getWorkflowRun();
+        WorkflowRunAttempt attempt = getWorkflowRunAttempt();
+        WorkflowRun workflowRun = attempt.getWorkflowRun();
 
-        for (HTSFSample htsfSample : htsfSampleSet) {
+        for (Sample sample : sampleSet) {
 
-            if ("Undetermined".equals(htsfSample.getBarcode())) {
+            if ("Undetermined".equals(sample.getBarcode())) {
                 continue;
             }
 
-            SequencerRun sequencerRun = htsfSample.getSequencerRun();
-            File outputDirectory = createOutputDirectory(sequencerRun.getName(), htsfSample, getName()
-                    .replace("DX", ""), getVersion());
+            logger.debug(sample.toString());
 
-            Set<EntityAttribute> attributeSet = workflowRun.getAttributes();
+            File outputDirectory = new File(sample.getOutputDirectory());
+
+            Set<Attribute> attributeSet = workflowRun.getAttributes();
             if (attributeSet != null && !attributeSet.isEmpty()) {
-                Iterator<EntityAttribute> attributeIter = attributeSet.iterator();
+                Iterator<Attribute> attributeIter = attributeSet.iterator();
                 while (attributeIter.hasNext()) {
-                    EntityAttribute attribute = attributeIter.next();
+                    Attribute attribute = attributeIter.next();
                     if ("isIncidental".equals(attribute.getName())) {
                         isIncidental = Boolean.TRUE;
                     }
@@ -144,9 +145,7 @@ public class NCGenesDXWorkflow extends AbstractWorkflow {
                         + intervalListByDXAndVersionFile.getAbsolutePath());
             }
 
-            Integer laneIndex = htsfSample.getLaneIndex();
-            logger.debug("laneIndex = {}", laneIndex);
-            Set<FileData> fileDataSet = htsfSample.getFileDatas();
+            Set<FileData> fileDataSet = sample.getFileDatas();
 
             File bamFile = null;
             File bamIndexFile = null;
@@ -186,8 +185,8 @@ public class NCGenesDXWorkflow extends AbstractWorkflow {
             try {
 
                 // new job
-                CondorJobBuilder builder = WorkflowJobFactory.createJob(++count, GATKDepthOfCoverageCLI.class,
-                        getWorkflowPlan(), htsfSample).siteName(siteName);
+                CondorJobBuilder builder = WorkflowJobFactory.createJob(++count, GATKDepthOfCoverageCLI.class, attempt,
+                        sample).siteName(siteName);
                 String outputPrefix = bamFile.getName().replace(".bam", String.format(".coverage.v%s.gene", version));
                 builder.addArgument(GATKDepthOfCoverageCLI.PHONEHOME, GATKPhoneHomeType.NO_ET.toString())
                         .addArgument(GATKDepthOfCoverageCLI.WORKDIRECTORY, outputDirectory.getAbsolutePath())
@@ -209,8 +208,8 @@ public class NCGenesDXWorkflow extends AbstractWorkflow {
                 graph.addVertex(gatkGeneDepthOfCoverageJob);
 
                 // new job
-                builder = WorkflowJobFactory.createJob(++count, SAMToolsViewCLI.class, getWorkflowPlan(), htsfSample)
-                        .siteName(siteName);
+                builder = WorkflowJobFactory.createJob(++count, SAMToolsViewCLI.class, attempt, sample).siteName(
+                        siteName);
                 File samtoolsViewOutput = new File(outputDirectory, bamFile.getName().replace(".bam", ".filtered.bam"));
                 builder.addArgument(SAMToolsViewCLI.BAMFORMAT)
                         .addArgument(SAMToolsViewCLI.OUTPUT, samtoolsViewOutput.getAbsolutePath())
@@ -221,8 +220,8 @@ public class NCGenesDXWorkflow extends AbstractWorkflow {
                 graph.addVertex(samtoolsViewJob);
 
                 // new job
-                builder = WorkflowJobFactory.createJob(++count, PicardSortSAMCLI.class, getWorkflowPlan(), htsfSample)
-                        .siteName(siteName);
+                builder = WorkflowJobFactory.createJob(++count, PicardSortSAMCLI.class, attempt, sample).siteName(
+                        siteName);
                 File picardSortOutput = new File(outputDirectory, samtoolsViewOutput.getName().replace(".bam",
                         String.format(".sorted.filtered_by_dxid_%s_v%s.bam", dx, version)));
                 builder.addArgument(PicardSortSAMCLI.INPUT, samtoolsViewOutput.getAbsolutePath())
@@ -235,8 +234,8 @@ public class NCGenesDXWorkflow extends AbstractWorkflow {
                 graph.addEdge(samtoolsViewJob, picardSortSAMJob);
 
                 // new job
-                builder = WorkflowJobFactory.createJob(++count, SAMToolsIndexCLI.class, getWorkflowPlan(), htsfSample)
-                        .siteName(siteName);
+                builder = WorkflowJobFactory.createJob(++count, SAMToolsIndexCLI.class, attempt, sample).siteName(
+                        siteName);
                 File picardSortSAMIndexOut = new File(outputDirectory, picardSortOutput.getName().replace(".bam",
                         ".bai"));
                 builder.addArgument(SAMToolsIndexCLI.INPUT, picardSortOutput.getAbsolutePath()).addArgument(
@@ -247,8 +246,7 @@ public class NCGenesDXWorkflow extends AbstractWorkflow {
                 graph.addEdge(picardSortSAMJob, picardSortSAMIndexJob);
 
                 // new job
-                builder = WorkflowJobFactory.createJob(++count, ZipCLI.class, getWorkflowPlan(), htsfSample).siteName(
-                        siteName);
+                builder = WorkflowJobFactory.createJob(++count, ZipCLI.class, attempt, sample).siteName(siteName);
                 File zipOutputFile = new File(outputDirectory, picardSortOutput.getName().replace(".bam", ".zip"));
                 builder.addArgument(ZipCLI.ENTRY, picardSortOutput.getAbsolutePath())
                         .addArgument(ZipCLI.ENTRY, picardSortSAMIndexOut.getAbsolutePath())
@@ -274,8 +272,8 @@ public class NCGenesDXWorkflow extends AbstractWorkflow {
                 }
 
                 // new job
-                builder = WorkflowJobFactory.createJob(++count, FilterVariantCLI.class, getWorkflowPlan(), htsfSample)
-                        .siteName(siteName);
+                builder = WorkflowJobFactory.createJob(++count, FilterVariantCLI.class, attempt, sample).siteName(
+                        siteName);
                 File filterVariantOutput = new File(outputDirectory, bamFile.getName().replace(".bam",
                         String.format(".filtered_by_dxid_%s_v%s.vcf", dx, version)));
                 builder.addArgument(FilterVariantCLI.INTERVALLIST, intervalListByDXAndVersionFile.getAbsolutePath())
@@ -298,8 +296,7 @@ public class NCGenesDXWorkflow extends AbstractWorkflow {
     public void postRun() throws WorkflowException {
         logger.info("ENTERING postRun()");
 
-        Set<HTSFSample> htsfSampleSet = getAggregateHTSFSampleSet();
-        logger.info("htsfSampleSet.size(): {}", htsfSampleSet.size());
+        Set<Sample> sampleSet = getAggregatedSamples();
 
         RunModeType runMode = getWorkflowBeanService().getMaPSeqConfigurationService().getRunMode();
 
@@ -313,27 +310,26 @@ public class NCGenesDXWorkflow extends AbstractWorkflow {
             e1.printStackTrace();
         }
 
-        WorkflowRun workflowRun = getWorkflowPlan().getWorkflowRun();
+        WorkflowRunAttempt attempt = getWorkflowRunAttempt();
+        WorkflowRun workflowRun = attempt.getWorkflowRun();
 
-        for (HTSFSample htsfSample : htsfSampleSet) {
+        for (Sample sample : sampleSet) {
 
-            if ("Undetermined".equals(htsfSample.getBarcode())) {
+            if ("Undetermined".equals(sample.getBarcode())) {
                 continue;
             }
 
-            SequencerRun sequencerRun = htsfSample.getSequencerRun();
-            File outputDirectory = createOutputDirectory(sequencerRun.getName(), htsfSample, getName()
-                    .replace("DX", ""), getVersion());
+            File outputDirectory = new File(sample.getOutputDirectory());
             File tmpDir = new File(outputDirectory, "tmp");
             if (!tmpDir.exists()) {
                 tmpDir.mkdirs();
             }
 
-            Set<EntityAttribute> attributeSet = workflowRun.getAttributes();
+            Set<Attribute> attributeSet = workflowRun.getAttributes();
             if (attributeSet != null && !attributeSet.isEmpty()) {
-                Iterator<EntityAttribute> attributeIter = attributeSet.iterator();
+                Iterator<Attribute> attributeIter = attributeSet.iterator();
                 while (attributeIter.hasNext()) {
-                    EntityAttribute attribute = attributeIter.next();
+                    Attribute attribute = attributeIter.next();
                     if ("GATKDepthOfCoverage.interval_list.version".equals(attribute.getName())) {
                         version = attribute.getValue();
                     }
@@ -347,13 +343,13 @@ public class NCGenesDXWorkflow extends AbstractWorkflow {
                 return;
             }
 
-            Integer laneIndex = htsfSample.getLaneIndex();
+            Integer laneIndex = sample.getLaneIndex();
             logger.debug("laneIndex = {}", laneIndex);
-            Set<FileData> fileDataSet = htsfSample.getFileDatas();
+            Set<FileData> fileDataSet = sample.getFileDatas();
 
             // assumption: a dash is used as a delimiter between a participantId and the external code
-            int idx = htsfSample.getName().lastIndexOf("-");
-            String participantId = idx != -1 ? htsfSample.getName().substring(0, idx) : htsfSample.getName();
+            int idx = sample.getName().lastIndexOf("-");
+            String participantId = idx != -1 ? sample.getName().substring(0, idx) : sample.getName();
 
             File bamFile = null;
 
