@@ -21,8 +21,8 @@ import edu.unc.mapseq.config.MaPSeqConfigurationService;
 import edu.unc.mapseq.config.RunModeType;
 import edu.unc.mapseq.dao.MaPSeqDAOBean;
 import edu.unc.mapseq.dao.MaPSeqDAOException;
-import edu.unc.mapseq.dao.model.HTSFSample;
-import edu.unc.mapseq.dao.model.SequencerRun;
+import edu.unc.mapseq.dao.model.Flowcell;
+import edu.unc.mapseq.dao.model.Sample;
 import edu.unc.mapseq.workflow.WorkflowUtil;
 import edu.unc.mapseq.workflow.impl.IRODSBean;
 
@@ -35,8 +35,8 @@ public class RegisterNCGenesDXToIRODSAction extends AbstractAction {
 
     private MaPSeqConfigurationService maPSeqConfigurationService;
 
-    @Argument(index = 0, name = "htsfSampleId", required = true, multiValued = false)
-    private Long htsfSampleId;
+    @Argument(index = 0, name = "sampleId", required = true, multiValued = false)
+    private Long sampleId;
 
     @Argument(index = 1, name = "version", required = true, multiValued = false)
     private String version;
@@ -49,9 +49,9 @@ public class RegisterNCGenesDXToIRODSAction extends AbstractAction {
 
         RunModeType runMode = getMaPSeqConfigurationService().getRunMode();
 
-        HTSFSample htsfSample;
+        Sample sample;
         try {
-            htsfSample = maPSeqDAOBean.getHTSFSampleDAO().findById(htsfSampleId);
+            sample = maPSeqDAOBean.getSampleDAO().findById(sampleId);
         } catch (MaPSeqDAOException e1) {
             e1.printStackTrace();
             return null;
@@ -70,24 +70,24 @@ public class RegisterNCGenesDXToIRODSAction extends AbstractAction {
                 break;
         }
 
-        SequencerRun sequencerRun = htsfSample.getSequencerRun();
+        Flowcell flowcell = sample.getFlowcell();
 
-        File sequencerRunOutputDirectory = new File(baseDir, sequencerRun.getName());
+        File sequencerRunOutputDirectory = new File(baseDir, flowcell.getName());
         File workflowDir = new File(sequencerRunOutputDirectory, "NCGenes");
-        File outputDirectory = new File(workflowDir, String.format("L%03d_%s", htsfSample.getLaneIndex(),
-                htsfSample.getBarcode()));
+        File outputDirectory = new File(workflowDir, String.format("L%03d_%s", sample.getLaneIndex(),
+                sample.getBarcode()));
         File tmpDir = new File(outputDirectory, "tmp");
         if (!tmpDir.exists()) {
             tmpDir.mkdirs();
         }
 
-        List<File> readPairList = WorkflowUtil.getReadPairList(htsfSample.getFileDatas(), sequencerRun.getName(),
-                htsfSample.getLaneIndex());
+        List<File> readPairList = WorkflowUtil.getReadPairList(sample.getFileDatas(), flowcell.getName(),
+                sample.getLaneIndex());
 
         // assumption: a dash is used as a delimiter between a participantId and
         // the external code
-        int idx = htsfSample.getName().lastIndexOf("-");
-        String participantId = idx != -1 ? htsfSample.getName().substring(0, idx) : htsfSample.getName();
+        int idx = sample.getName().lastIndexOf("-");
+        String participantId = idx != -1 ? sample.getName().substring(0, idx) : sample.getName();
 
         // File r1FastqFile = readPairList.get(0);
         // String r1FastqRootName =
@@ -256,7 +256,7 @@ public class RegisterNCGenesDXToIRODSAction extends AbstractAction {
             }
         }
 
-        System.out.println("FINISHED PROCESSING: " + htsfSample.toString());
+        System.out.println("FINISHED PROCESSING: " + sample.toString());
         return null;
 
     }
@@ -277,12 +277,12 @@ public class RegisterNCGenesDXToIRODSAction extends AbstractAction {
         this.maPSeqConfigurationService = maPSeqConfigurationService;
     }
 
-    public Long getHtsfSampleId() {
-        return htsfSampleId;
+    public Long getSampleId() {
+        return sampleId;
     }
 
-    public void setHtsfSampleId(Long htsfSampleId) {
-        this.htsfSampleId = htsfSampleId;
+    public void setSampleId(Long sampleId) {
+        this.sampleId = sampleId;
     }
 
     public String getVersion() {
