@@ -57,26 +57,12 @@ public class RegisterNCGenesDXToIRODSAction extends AbstractAction {
             return null;
         }
 
-        File mapseqOutputDirectory = new File(System.getenv("MAPSEQ_OUTPUT_DIRECTORY"));
-        File baseDir;
-        switch (runMode) {
-            case DEV:
-            case STAGING:
-                baseDir = new File(mapseqOutputDirectory, runMode.toString().toLowerCase());
-                break;
-            case PROD:
-            default:
-                baseDir = mapseqOutputDirectory;
-                break;
-        }
-
         Flowcell flowcell = sample.getFlowcell();
 
-        File sequencerRunOutputDirectory = new File(baseDir, flowcell.getName());
-        File workflowDir = new File(sequencerRunOutputDirectory, "NCGenes");
-        File outputDirectory = new File(workflowDir, String.format("L%03d_%s", sample.getLaneIndex(),
-                sample.getBarcode()));
-        File tmpDir = new File(outputDirectory, "tmp");
+        File outputDirectory = new File(sample.getOutputDirectory(), "NCGenes");
+        
+        File tmpDir = new File(sample.getOutputDirectory(), "tmp");
+        
         if (!tmpDir.exists()) {
             tmpDir.mkdirs();
         }
