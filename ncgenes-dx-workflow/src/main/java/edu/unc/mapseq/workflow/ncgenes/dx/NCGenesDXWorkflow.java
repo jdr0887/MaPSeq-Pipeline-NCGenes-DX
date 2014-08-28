@@ -106,7 +106,9 @@ public class NCGenesDXWorkflow extends AbstractSampleWorkflow {
 
             logger.debug(sample.toString());
 
-            File outputDirectory = new File(sample.getOutputDirectory());
+            File outputDirectory = new File(sample.getOutputDirectory(), getName().replace("DX", ""));
+            File tmpDirectory = new File(outputDirectory, "tmp");
+            tmpDirectory.mkdirs();
 
             Set<Attribute> attributeSet = workflowRun.getAttributes();
             if (attributeSet != null && !attributeSet.isEmpty()) {
