@@ -187,8 +187,8 @@ public class NCGenesDXWorkflow extends AbstractSampleWorkflow {
             try {
 
                 // new job
-                CondorJobBuilder builder = WorkflowJobFactory.createJob(++count, GATKDepthOfCoverageCLI.class, attempt,
-                        sample).siteName(siteName);
+                CondorJobBuilder builder = WorkflowJobFactory.createJob(++count, GATKDepthOfCoverageCLI.class, attempt)
+                        .siteName(siteName);
                 String outputPrefix = bamFile.getName().replace(".bam", String.format(".coverage.v%s.gene", version));
                 builder.addArgument(GATKDepthOfCoverageCLI.PHONEHOME, GATKPhoneHomeType.NO_ET.toString())
                         .addArgument(GATKDepthOfCoverageCLI.WORKDIRECTORY, outputDirectory.getAbsolutePath())
@@ -210,8 +210,7 @@ public class NCGenesDXWorkflow extends AbstractSampleWorkflow {
                 graph.addVertex(gatkGeneDepthOfCoverageJob);
 
                 // new job
-                builder = WorkflowJobFactory.createJob(++count, SAMToolsViewCLI.class, attempt, sample).siteName(
-                        siteName);
+                builder = WorkflowJobFactory.createJob(++count, SAMToolsViewCLI.class, attempt).siteName(siteName);
                 File samtoolsViewOutput = new File(outputDirectory, bamFile.getName().replace(".bam", ".filtered.bam"));
                 builder.addArgument(SAMToolsViewCLI.BAMFORMAT)
                         .addArgument(SAMToolsViewCLI.OUTPUT, samtoolsViewOutput.getAbsolutePath())
@@ -222,8 +221,7 @@ public class NCGenesDXWorkflow extends AbstractSampleWorkflow {
                 graph.addVertex(samtoolsViewJob);
 
                 // new job
-                builder = WorkflowJobFactory.createJob(++count, PicardSortSAMCLI.class, attempt, sample).siteName(
-                        siteName);
+                builder = WorkflowJobFactory.createJob(++count, PicardSortSAMCLI.class, attempt).siteName(siteName);
                 File picardSortOutput = new File(outputDirectory, samtoolsViewOutput.getName().replace(".bam",
                         String.format(".sorted.filtered_by_dxid_%s_v%s.bam", dx, version)));
                 builder.addArgument(PicardSortSAMCLI.INPUT, samtoolsViewOutput.getAbsolutePath())
@@ -236,8 +234,7 @@ public class NCGenesDXWorkflow extends AbstractSampleWorkflow {
                 graph.addEdge(samtoolsViewJob, picardSortSAMJob);
 
                 // new job
-                builder = WorkflowJobFactory.createJob(++count, SAMToolsIndexCLI.class, attempt, sample).siteName(
-                        siteName);
+                builder = WorkflowJobFactory.createJob(++count, SAMToolsIndexCLI.class, attempt).siteName(siteName);
                 File picardSortSAMIndexOut = new File(outputDirectory, picardSortOutput.getName().replace(".bam",
                         ".bai"));
                 builder.addArgument(SAMToolsIndexCLI.INPUT, picardSortOutput.getAbsolutePath()).addArgument(
@@ -248,7 +245,7 @@ public class NCGenesDXWorkflow extends AbstractSampleWorkflow {
                 graph.addEdge(picardSortSAMJob, picardSortSAMIndexJob);
 
                 // new job
-                builder = WorkflowJobFactory.createJob(++count, ZipCLI.class, attempt, sample).siteName(siteName);
+                builder = WorkflowJobFactory.createJob(++count, ZipCLI.class, attempt).siteName(siteName);
                 File zipOutputFile = new File(outputDirectory, picardSortOutput.getName().replace(".bam", ".zip"));
                 builder.addArgument(ZipCLI.ENTRY, picardSortOutput.getAbsolutePath())
                         .addArgument(ZipCLI.ENTRY, picardSortSAMIndexOut.getAbsolutePath())
@@ -274,8 +271,7 @@ public class NCGenesDXWorkflow extends AbstractSampleWorkflow {
                 }
 
                 // new job
-                builder = WorkflowJobFactory.createJob(++count, FilterVariantCLI.class, attempt, sample).siteName(
-                        siteName);
+                builder = WorkflowJobFactory.createJob(++count, FilterVariantCLI.class, attempt).siteName(siteName);
                 File filterVariantOutput = new File(outputDirectory, bamFile.getName().replace(".bam",
                         String.format(".filtered_by_dxid_%s_v%s.vcf", dx, version)));
                 builder.addArgument(FilterVariantCLI.INTERVALLIST, intervalListByDXAndVersionFile.getAbsolutePath())
