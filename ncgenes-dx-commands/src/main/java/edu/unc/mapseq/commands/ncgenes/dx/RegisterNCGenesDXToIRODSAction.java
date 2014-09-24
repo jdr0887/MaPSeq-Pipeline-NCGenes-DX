@@ -60,9 +60,9 @@ public class RegisterNCGenesDXToIRODSAction extends AbstractAction {
         Flowcell flowcell = sample.getFlowcell();
 
         File outputDirectory = new File(sample.getOutputDirectory(), "NCGenes");
-        
+
         File tmpDir = new File(sample.getOutputDirectory(), "tmp");
-        
+
         if (!tmpDir.exists()) {
             tmpDir.mkdirs();
         }
