@@ -2,13 +2,13 @@
 <blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0" default-activation="lazy">
 
   <command-bundle xmlns="http://karaf.apache.org/xmlns/shell/v1.1.0">
-    <command name="ncgenes-dx/run-workflow">
+    <command>
       <action class="edu.unc.mapseq.commands.ncgenes.dx.RunNCGenesDXWorkflowAction">
         <property name="maPSeqDAOBean" ref="maPSeqDAOBean" />
         <property name="maPSeqConfigurationService" ref="maPSeqConfigurationService" />
       </action>
     </command>
-    <command name="ncgenes-dx/register-to-irods">
+    <command>
       <action class="edu.unc.mapseq.commands.ncgenes.dx.RegisterNCGenesDXToIRODSAction">
         <property name="maPSeqDAOBean" ref="maPSeqDAOBean" />
         <property name="maPSeqConfigurationService" ref="maPSeqConfigurationService" />
@@ -17,6 +17,7 @@
   </command-bundle>
 
   <reference id="maPSeqConfigurationService" interface="edu.unc.mapseq.config.MaPSeqConfigurationService" />
+  <reference id="attributeDAO" interface="edu.unc.mapseq.dao.AttributeDAO" />
   <reference id="fileDataDAO" interface="edu.unc.mapseq.dao.FileDataDAO" />
   <reference id="sampleDAO" interface="edu.unc.mapseq.dao.SampleDAO" />
   <reference id="jobDAO" interface="edu.unc.mapseq.dao.JobDAO" />
@@ -27,6 +28,7 @@
   <reference id="workflowRunAttemptDAO" interface="edu.unc.mapseq.dao.WorkflowRunAttemptDAO" />
 
   <bean id="maPSeqDAOBean" class="edu.unc.mapseq.dao.MaPSeqDAOBean">
+    <property name="attributeDAO" ref="attributeDAO" />
     <property name="fileDataDAO" ref="fileDataDAO" />
     <property name="sampleDAO" ref="sampleDAO" />
     <property name="jobDAO" ref="jobDAO" />
