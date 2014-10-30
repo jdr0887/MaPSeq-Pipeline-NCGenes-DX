@@ -3,13 +3,19 @@
 
   <command-bundle xmlns="http://karaf.apache.org/xmlns/shell/v1.1.0">
     <command>
-      <action class="edu.unc.mapseq.commands.ncgenes.dx.RunNCGenesDXWorkflowAction">
+      <action class="edu.unc.mapseq.commands.ncgenes.dx.RunWorkflowAction">
         <property name="maPSeqDAOBean" ref="maPSeqDAOBean" />
         <property name="maPSeqConfigurationService" ref="maPSeqConfigurationService" />
       </action>
     </command>
     <command>
-      <action class="edu.unc.mapseq.commands.ncgenes.dx.RegisterNCGenesDXToIRODSAction">
+      <action class="edu.unc.mapseq.commands.ncgenes.dx.RegisterToIRODSAction">
+        <property name="maPSeqDAOBean" ref="maPSeqDAOBean" />
+        <property name="maPSeqConfigurationService" ref="maPSeqConfigurationService" />
+      </action>
+    </command>
+    <command>
+      <action class="edu.unc.mapseq.commands.ncgenes.dx.RegisterToIRODSMigrationAction">
         <property name="maPSeqDAOBean" ref="maPSeqDAOBean" />
         <property name="maPSeqConfigurationService" ref="maPSeqConfigurationService" />
       </action>
