@@ -212,7 +212,8 @@ public class NCGenesDXWorkflow extends AbstractSampleWorkflow {
                 // new job
                 builder = WorkflowJobFactory.createJob(++count, SAMToolsViewCLI.class, attempt.getId(), sample.getId())
                         .siteName(siteName);
-                File samtoolsViewOutput = new File(outputDirectory, bamFile.getName().replace(".bam", ".filtered.bam"));
+                File samtoolsViewOutput = new File(outputDirectory, bamFile.getName().replace(".bam",
+                        String.format(".filtered_by_dxid_%s_v%s.bam", dx, version)));
                 builder.addArgument(SAMToolsViewCLI.BAMFORMAT)
                         .addArgument(SAMToolsViewCLI.OUTPUT, samtoolsViewOutput.getAbsolutePath())
                         .addArgument(SAMToolsViewCLI.REGIONSFILE, intervalListByDXAndVersionFile.getAbsolutePath())
@@ -225,7 +226,7 @@ public class NCGenesDXWorkflow extends AbstractSampleWorkflow {
                 builder = WorkflowJobFactory
                         .createJob(++count, PicardSortSAMCLI.class, attempt.getId(), sample.getId()).siteName(siteName);
                 File picardSortOutput = new File(outputDirectory, samtoolsViewOutput.getName().replace(".bam",
-                        String.format(".sorted.filtered_by_dxid_%s_v%s.bam", dx, version)));
+                        ".sorted.bam"));
                 builder.addArgument(PicardSortSAMCLI.INPUT, samtoolsViewOutput.getAbsolutePath())
                         .addArgument(PicardSortSAMCLI.OUTPUT, picardSortOutput.getAbsolutePath())
                         .addArgument(PicardSortSAMCLI.SORTORDER,
