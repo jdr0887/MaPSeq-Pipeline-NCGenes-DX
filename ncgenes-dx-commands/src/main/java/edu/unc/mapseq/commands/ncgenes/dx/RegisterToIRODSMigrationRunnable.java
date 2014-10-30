@@ -84,8 +84,6 @@ public class RegisterToIRODSMigrationRunnable implements Runnable {
                         return;
                     }
 
-                    List<CommandInput> commandInputList = new LinkedList<CommandInput>();
-
                     CommandOutput commandOutput = null;
                     CommandInput commandInput = null;
                     String ncgenesIRODSDirectory = null;
@@ -110,6 +108,8 @@ public class RegisterToIRODSMigrationRunnable implements Runnable {
                                                     version);
                                     break;
                             }
+
+                            List<CommandInput> commandInputList = new LinkedList<CommandInput>();
 
                             List<IRODSBean> files2RegisterToIRODS = new ArrayList<IRODSBean>();
 
