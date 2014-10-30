@@ -90,8 +90,6 @@ public class RegisterToIRODSMigrationRunnable implements Runnable {
                     CommandInput commandInput = null;
                     String ncgenesIRODSDirectory = null;
 
-                    List<IRODSBean> files2RegisterToIRODS = new ArrayList<IRODSBean>();
-
                     for (int i = 1; i < 37; ++i) {
                         for (int j = 1; j < 29; ++j) {
 
@@ -112,6 +110,8 @@ public class RegisterToIRODSMigrationRunnable implements Runnable {
                                                     version);
                                     break;
                             }
+
+                            List<IRODSBean> files2RegisterToIRODS = new ArrayList<IRODSBean>();
 
                             commandInput = new CommandInput();
                             commandInput.setCommand(String.format("%s/bin/imkdir -p %s", irodsHome,
@@ -146,36 +146,36 @@ public class RegisterToIRODSMigrationRunnable implements Runnable {
 
                             File f = new File(outputDirectory, gatkTableRecalibrationOut.getName().replace(".bam",
                                     String.format(".coverage.v%s.gene.sample_cumulative_coverage_counts", version)));
-                            IRODSBean bean = new IRODSBean(f, "GeneCoverageCount", version, null, runMode);
-                            files2RegisterToIRODS.add(bean);
+                            IRODSBean irodsbean = new IRODSBean(f, "GeneCoverageCount", version, null, runMode);
+                            files2RegisterToIRODS.add(irodsbean);
 
                             f = new File(outputDirectory, gatkTableRecalibrationOut.getName()
                                     .replace(
                                             ".bam",
                                             String.format(".coverage.v%s.gene.sample_cumulative_coverage_proportions",
                                                     version)));
-                            bean = new IRODSBean(f, "GeneCoverageProportions", version, null, runMode);
-                            files2RegisterToIRODS.add(bean);
+                            irodsbean = new IRODSBean(f, "GeneCoverageProportions", version, null, runMode);
+                            files2RegisterToIRODS.add(irodsbean);
 
                             f = new File(outputDirectory, gatkTableRecalibrationOut.getName().replace(".bam",
                                     String.format(".coverage.v%s.gene.sample_interval_statistics", version)));
-                            bean = new IRODSBean(f, "GeneIntervalStatistics", version, null, runMode);
-                            files2RegisterToIRODS.add(bean);
+                            irodsbean = new IRODSBean(f, "GeneIntervalStatistics", version, null, runMode);
+                            files2RegisterToIRODS.add(irodsbean);
 
                             f = new File(outputDirectory, gatkTableRecalibrationOut.getName().replace(".bam",
                                     String.format(".coverage.v%s.gene.sample_interval_summary", version)));
-                            bean = new IRODSBean(f, "GeneIntervalSummary", version, null, runMode);
-                            files2RegisterToIRODS.add(bean);
+                            irodsbean = new IRODSBean(f, "GeneIntervalSummary", version, null, runMode);
+                            files2RegisterToIRODS.add(irodsbean);
 
                             f = new File(outputDirectory, gatkTableRecalibrationOut.getName().replace(".bam",
                                     String.format(".coverage.v%s.gene.sample_statistics", version)));
-                            bean = new IRODSBean(f, "GeneSampleStatistics", version, null, runMode);
-                            files2RegisterToIRODS.add(bean);
+                            irodsbean = new IRODSBean(f, "GeneSampleStatistics", version, null, runMode);
+                            files2RegisterToIRODS.add(irodsbean);
 
                             f = new File(outputDirectory, gatkTableRecalibrationOut.getName().replace(".bam",
                                     String.format(".coverage.v%s.gene.sample_summary", version)));
-                            bean = new IRODSBean(f, "GeneSampleSummary", version, null, runMode);
-                            files2RegisterToIRODS.add(bean);
+                            irodsbean = new IRODSBean(f, "GeneSampleSummary", version, null, runMode);
+                            files2RegisterToIRODS.add(irodsbean);
 
                             File samtoolsViewOutput = new File(outputDirectory, gatkTableRecalibrationOut.getName()
                                     .replace(".bam", ".filtered.bam"));
@@ -184,102 +184,104 @@ public class RegisterToIRODSMigrationRunnable implements Runnable {
                             File picardSortSAMIndexOut = new File(outputDirectory, picardSortOutput.getName().replace(
                                     ".bam", ".bai"));
 
-                            bean = new IRODSBean(picardSortSAMIndexOut, "FilteredBamIndex", version, dx, runMode);
-                            files2RegisterToIRODS.add(bean);
+                            irodsbean = new IRODSBean(picardSortSAMIndexOut, "FilteredBamIndex", version, dx, runMode);
+                            files2RegisterToIRODS.add(irodsbean);
 
                             File zipOutputFile = new File(outputDirectory, picardSortOutput.getName().replace(".bam",
                                     ".zip"));
-                            bean = new IRODSBean(zipOutputFile, "FilteredBamZip", version, dx, runMode);
-                            files2RegisterToIRODS.add(bean);
+                            irodsbean = new IRODSBean(zipOutputFile, "FilteredBamZip", version, dx, runMode);
+                            files2RegisterToIRODS.add(irodsbean);
 
                             File filterVariantOutput = new File(outputDirectory, gatkTableRecalibrationOut.getName()
                                     .replace(".bam", String.format(".filtered_by_dxid_%s_v%s.vcf", dx, version)));
-                            bean = new IRODSBean(filterVariantOutput, "FilteredVcf", version, dx, runMode);
-                            files2RegisterToIRODS.add(bean);
+                            irodsbean = new IRODSBean(filterVariantOutput, "FilteredVcf", version, dx, runMode);
+                            files2RegisterToIRODS.add(irodsbean);
 
-                        }
-                    }
+                            for (IRODSBean bean : files2RegisterToIRODS) {
 
-                    for (IRODSBean bean : files2RegisterToIRODS) {
+                                f = bean.getFile();
+                                if (!f.exists()) {
+                                    logger.warn("file to register doesn't exist: {}", f.getAbsolutePath());
+                                    continue;
+                                }
 
-                        File f = bean.getFile();
-                        if (!f.exists()) {
-                            logger.warn("file to register doesn't exist: {}", f.getAbsolutePath());
-                            continue;
-                        }
+                                commandInput = new CommandInput();
+                                commandInput.setExitImmediately(Boolean.FALSE);
 
-                        commandInput = new CommandInput();
-                        commandInput.setExitImmediately(Boolean.FALSE);
+                                StringBuilder registerCommandSB = new StringBuilder();
+                                String registrationCommand = String.format("%s/bin/ireg -f %s %s/%s", irodsHome,
+                                        f.getAbsolutePath(), ncgenesIRODSDirectory, f.getName());
+                                String deRegistrationCommand = String.format("%s/bin/irm -U %s/%s", irodsHome,
+                                        ncgenesIRODSDirectory, f.getName());
+                                registerCommandSB.append(registrationCommand).append("\n");
+                                registerCommandSB.append(String.format("if [ $? != 0 ]; then %s; %s; fi%n",
+                                        deRegistrationCommand, registrationCommand));
+                                commandInput.setCommand(registerCommandSB.toString());
+                                commandInput.setWorkDir(tmpDir);
+                                commandInputList.add(commandInput);
 
-                        StringBuilder registerCommandSB = new StringBuilder();
-                        String registrationCommand = String.format("%s/bin/ireg -f %s %s/%s", irodsHome,
-                                f.getAbsolutePath(), ncgenesIRODSDirectory, f.getName());
-                        String deRegistrationCommand = String.format("%s/bin/irm -U %s/%s", irodsHome,
-                                ncgenesIRODSDirectory, f.getName());
-                        registerCommandSB.append(registrationCommand).append("\n");
-                        registerCommandSB.append(String.format("if [ $? != 0 ]; then %s; %s; fi%n",
-                                deRegistrationCommand, registrationCommand));
-                        commandInput.setCommand(registerCommandSB.toString());
-                        commandInput.setWorkDir(tmpDir);
-                        commandInputList.add(commandInput);
+                                commandInput = new CommandInput();
+                                commandInput.setCommand(String.format(
+                                        "%s/bin/imeta add -d %s/%s ParticipantID %s NCGENES", irodsHome,
+                                        ncgenesIRODSDirectory, f.getName(), participantId));
+                                commandInput.setWorkDir(tmpDir);
+                                commandInputList.add(commandInput);
 
-                        commandInput = new CommandInput();
-                        commandInput.setCommand(String.format("%s/bin/imeta add -d %s/%s ParticipantID %s NCGENES",
-                                irodsHome, ncgenesIRODSDirectory, f.getName(), participantId));
-                        commandInput.setWorkDir(tmpDir);
-                        commandInputList.add(commandInput);
+                                commandInput = new CommandInput();
+                                commandInput.setCommand(String.format("%s/bin/imeta add -d %s/%s FileType %s NCGENES",
+                                        irodsHome, ncgenesIRODSDirectory, f.getName(), bean.getType()));
+                                commandInput.setWorkDir(tmpDir);
+                                commandInputList.add(commandInput);
 
-                        commandInput = new CommandInput();
-                        commandInput.setCommand(String.format("%s/bin/imeta add -d %s/%s FileType %s NCGENES",
-                                irodsHome, ncgenesIRODSDirectory, f.getName(), bean.getType()));
-                        commandInput.setWorkDir(tmpDir);
-                        commandInputList.add(commandInput);
+                                if (StringUtils.isNotEmpty(bean.getDx())) {
+                                    commandInput = new CommandInput();
+                                    commandInput.setCommand(String.format("%s/bin/imeta add -d %s/%s DxID %s NCGENES",
+                                            irodsHome, ncgenesIRODSDirectory, f.getName(), bean.getDx()));
+                                    commandInput.setWorkDir(tmpDir);
+                                    commandInputList.add(commandInput);
+                                }
 
-                        if (StringUtils.isNotEmpty(bean.getDx())) {
-                            commandInput = new CommandInput();
-                            commandInput.setCommand(String.format("%s/bin/imeta add -d %s/%s DxID %s NCGENES",
-                                    irodsHome, ncgenesIRODSDirectory, f.getName(), bean.getDx()));
-                            commandInput.setWorkDir(tmpDir);
-                            commandInputList.add(commandInput);
-                        }
+                                if (StringUtils.isNotEmpty(bean.getVersion())) {
+                                    commandInput = new CommandInput();
+                                    commandInput.setCommand(String.format(
+                                            "%s/bin/imeta add -d %s/%s DxVersion %s NCGENES", irodsHome,
+                                            ncgenesIRODSDirectory, f.getName(), bean.getVersion()));
+                                    commandInput.setWorkDir(tmpDir);
+                                    commandInputList.add(commandInput);
+                                }
 
-                        if (StringUtils.isNotEmpty(bean.getVersion())) {
-                            commandInput = new CommandInput();
-                            commandInput.setCommand(String.format("%s/bin/imeta add -d %s/%s DxVersion %s NCGENES",
-                                    irodsHome, ncgenesIRODSDirectory, f.getName(), bean.getVersion()));
-                            commandInput.setWorkDir(tmpDir);
-                            commandInputList.add(commandInput);
-                        }
+                                commandInput = new CommandInput();
+                                commandInput.setCommand(String.format("%s/bin/imeta add -d %s/%s System %s NCGENES",
+                                        irodsHome, ncgenesIRODSDirectory, f.getName(),
+                                        StringUtils.capitalize(bean.getRunMode().toString().toLowerCase())));
+                                commandInput.setWorkDir(tmpDir);
+                                commandInputList.add(commandInput);
 
-                        commandInput = new CommandInput();
-                        commandInput.setCommand(String.format("%s/bin/imeta add -d %s/%s System %s NCGENES", irodsHome,
-                                ncgenesIRODSDirectory, f.getName(),
-                                StringUtils.capitalize(bean.getRunMode().toString().toLowerCase())));
-                        commandInput.setWorkDir(tmpDir);
-                        commandInputList.add(commandInput);
-
-                    }
-
-                    File mapseqrc = new File(System.getProperty("user.home"), ".mapseqrc");
-                    Executor executor = BashExecutor.getInstance();
-
-                    for (CommandInput ci : commandInputList) {
-                        try {
-                            commandOutput = executor.execute(ci, mapseqrc);
-                            if (commandOutput.getExitCode() != 0) {
-                                logger.info("commandOutput.getExitCode(): {}", commandOutput.getExitCode());
-                                logger.warn("command failed: {}", ci.getCommand());
                             }
-                            logger.debug("commandOutput.getStdout(): {}", commandOutput.getStdout());
-                        } catch (ExecutorException e) {
-                            if (commandOutput != null) {
-                                logger.warn("commandOutput.getStderr(): {}", commandOutput.getStderr());
+
+                            File mapseqrc = new File(System.getProperty("user.home"), ".mapseqrc");
+                            Executor executor = BashExecutor.getInstance();
+
+                            for (CommandInput ci : commandInputList) {
+                                try {
+                                    commandOutput = executor.execute(ci, mapseqrc);
+                                    if (commandOutput.getExitCode() != 0) {
+                                        logger.info("commandOutput.getExitCode(): {}", commandOutput.getExitCode());
+                                        logger.warn("command failed: {}", ci.getCommand());
+                                    }
+                                    logger.debug("commandOutput.getStdout(): {}", commandOutput.getStdout());
+                                } catch (ExecutorException e) {
+                                    if (commandOutput != null) {
+                                        logger.warn("commandOutput.getStderr(): {}", commandOutput.getStderr());
+                                    }
+                                }
                             }
+
+                            logger.info("FINISHED PROCESSING: {}", sample.toString());
+
                         }
+
                     }
-
-                    logger.info("FINISHED PROCESSING: {}", sample.toString());
-
                 }
 
             }
