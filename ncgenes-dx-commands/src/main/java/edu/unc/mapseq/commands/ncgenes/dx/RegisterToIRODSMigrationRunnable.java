@@ -115,8 +115,20 @@ public class RegisterToIRODSMigrationRunnable implements Runnable {
                         commandInputList.add(commandInput);
 
                         commandInput = new CommandInput();
+                        commandInput.setCommand(String.format("%s/bin/imeta rm -C %s Project NCGENES", irodsHome,
+                                ncgenesIRODSDirectory));
+                        commandInput.setWorkDir(tmpDir);
+                        commandInputList.add(commandInput);
+
+                        commandInput = new CommandInput();
                         commandInput.setCommand(String.format("%s/bin/imeta add -C %s Project NCGENES", irodsHome,
                                 ncgenesIRODSDirectory));
+                        commandInput.setWorkDir(tmpDir);
+                        commandInputList.add(commandInput);
+
+                        commandInput = new CommandInput();
+                        commandInput.setCommand(String.format("%s/bin/imeta rm -C %s ParticipantID %s NCGENES",
+                                irodsHome, ncgenesIRODSDirectory, participantId));
                         commandInput.setWorkDir(tmpDir);
                         commandInputList.add(commandInput);
 
