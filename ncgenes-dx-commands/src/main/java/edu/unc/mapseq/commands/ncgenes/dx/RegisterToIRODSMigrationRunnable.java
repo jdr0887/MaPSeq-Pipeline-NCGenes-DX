@@ -110,19 +110,14 @@ public class RegisterToIRODSMigrationRunnable implements Runnable {
                         List<IRODSBean> files2RegisterToIRODS = new ArrayList<IRODSBean>();
 
                         commandInput = new CommandInput();
-                        commandInput.setCommand(String.format("%s/bin/imkdir -p %s", irodsHome, ncgenesIRODSDirectory));
-                        commandInput.setWorkDir(tmpDir);
-                        commandInputList.add(commandInput);
-
-                        commandInput = new CommandInput();
-                        commandInput.setCommand(String.format("%s/bin/imeta add -C %s Project NCGENES", irodsHome,
+                        commandInput.setExitImmediately(Boolean.FALSE);
+                        StringBuilder sb = new StringBuilder();
+                        sb.append(String.format("%s/bin/imkdir -p %s%n", irodsHome, ncgenesIRODSDirectory));
+                        sb.append(String.format("%s/bin/imeta add -C %s Project NCGENES%n", irodsHome,
                                 ncgenesIRODSDirectory));
-                        commandInput.setWorkDir(tmpDir);
-                        commandInputList.add(commandInput);
-
-                        commandInput = new CommandInput();
-                        commandInput.setCommand(String.format("%s/bin/imeta add -C %s ParticipantID %s NCGENES",
-                                irodsHome, ncgenesIRODSDirectory, participantId));
+                        sb.append(String.format("%s/bin/imeta add -C %s ParticipantID %s NCGENES%n", irodsHome,
+                                ncgenesIRODSDirectory, participantId));
+                        commandInput.setCommand(sb.toString());
                         commandInput.setWorkDir(tmpDir);
                         commandInputList.add(commandInput);
 
@@ -219,14 +214,16 @@ public class RegisterToIRODSMigrationRunnable implements Runnable {
                             commandInputList.add(commandInput);
 
                             commandInput = new CommandInput();
-                            commandInput.setCommand(String.format("%s/bin/imeta add -d %s/%s ParticipantID %s NCGENES",
-                                    irodsHome, ncgenesIRODSDirectory, f.getName(), participantId));
-                            commandInput.setWorkDir(tmpDir);
-                            commandInputList.add(commandInput);
-
-                            commandInput = new CommandInput();
-                            commandInput.setCommand(String.format("%s/bin/imeta add -d %s/%s FileType %s NCGENES",
-                                    irodsHome, ncgenesIRODSDirectory, f.getName(), bean.getType()));
+                            commandInput.setExitImmediately(Boolean.FALSE);
+                            sb = new StringBuilder();
+                            sb.append(String.format("%s/bin/imeta add -d %s/%s ParticipantID %s NCGENES%n", irodsHome,
+                                    ncgenesIRODSDirectory, f.getName(), participantId));
+                            sb.append(String.format("%s/bin/imeta add -d %s/%s FileType %s NCGENES%n", irodsHome,
+                                    ncgenesIRODSDirectory, f.getName(), bean.getType()));
+                            sb.append(String.format("%s/bin/imeta add -d %s/%s System %s NCGENES%n", irodsHome,
+                                    ncgenesIRODSDirectory, f.getName(),
+                                    StringUtils.capitalize(bean.getRunMode().toString().toLowerCase())));
+                            commandInput.setCommand(sb.toString());
                             commandInput.setWorkDir(tmpDir);
                             commandInputList.add(commandInput);
 
@@ -245,13 +242,6 @@ public class RegisterToIRODSMigrationRunnable implements Runnable {
                                 commandInput.setWorkDir(tmpDir);
                                 commandInputList.add(commandInput);
                             }
-
-                            commandInput = new CommandInput();
-                            commandInput.setCommand(String.format("%s/bin/imeta add -d %s/%s System %s NCGENES",
-                                    irodsHome, ncgenesIRODSDirectory, f.getName(),
-                                    StringUtils.capitalize(bean.getRunMode().toString().toLowerCase())));
-                            commandInput.setWorkDir(tmpDir);
-                            commandInputList.add(commandInput);
 
                         }
 
