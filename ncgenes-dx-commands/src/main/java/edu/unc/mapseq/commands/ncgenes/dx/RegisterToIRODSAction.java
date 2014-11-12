@@ -35,9 +35,9 @@ public class RegisterToIRODSAction extends AbstractAction {
         RegisterToIRODSRunnable runnable = new RegisterToIRODSRunnable();
         runnable.setMaPSeqDAOBean(maPSeqDAOBean);
         runnable.setMaPSeqConfigurationService(maPSeqConfigurationService);
-        if (sampleId != null) {
-            runnable.setSampleId(sampleId);
-        }
+        runnable.setSampleId(sampleId);
+        runnable.setDx(dx);
+        runnable.setVersion(version);
         Executors.newSingleThreadExecutor().execute(runnable);
         return null;
     }
