@@ -54,7 +54,7 @@ public class RegisterToIRODSRunnable implements Runnable {
             logger.error("Sample not found");
             return;
         }
-        
+
         Flowcell flowcell = sample.getFlowcell();
 
         File outputDirectory = new File(sample.getOutputDirectory(), "NCGenes");
@@ -150,9 +150,8 @@ public class RegisterToIRODSRunnable implements Runnable {
                 null, runMode));
 
         File samtoolsViewOutput = new File(outputDirectory, gatkTableRecalibrationOut.getName().replace(".bam",
-                ".filtered.bam"));
-        File picardSortOutput = new File(outputDirectory, samtoolsViewOutput.getName().replace(".bam",
-                String.format(".sorted.filtered_by_dxid_%s_v%s.bam", dx, version)));
+                String.format(".filtered_by_dxid_%s_v%s.bam", dx, version)));
+        File picardSortOutput = new File(outputDirectory, samtoolsViewOutput.getName().replace(".bam", "sorted.bam"));
         File picardSortSAMIndexOut = new File(outputDirectory, picardSortOutput.getName().replace(".bam", ".bai"));
         files2RegisterToIRODS.add(new IRODSBean(picardSortSAMIndexOut, "FilteredBamIndex", version, dx, runMode));
 
