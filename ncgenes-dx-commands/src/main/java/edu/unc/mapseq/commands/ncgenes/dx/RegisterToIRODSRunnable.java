@@ -151,7 +151,7 @@ public class RegisterToIRODSRunnable implements Runnable {
 
         File samtoolsViewOutput = new File(outputDirectory, gatkTableRecalibrationOut.getName().replace(".bam",
                 String.format(".filtered_by_dxid_%s_v%s.bam", dx, version)));
-        File picardSortOutput = new File(outputDirectory, samtoolsViewOutput.getName().replace(".bam", "sorted.bam"));
+        File picardSortOutput = new File(outputDirectory, samtoolsViewOutput.getName().replace(".bam", ".sorted.bam"));
         File picardSortSAMIndexOut = new File(outputDirectory, picardSortOutput.getName().replace(".bam", ".bai"));
         files2RegisterToIRODS.add(new IRODSBean(picardSortSAMIndexOut, "FilteredBamIndex", version, dx, runMode));
 
