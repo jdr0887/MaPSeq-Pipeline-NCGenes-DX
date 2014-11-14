@@ -520,9 +520,4 @@ public class NCGenesDXWorkflow extends AbstractSampleWorkflow {
 
     }
 
-    @Override
-    public void cleanUp() throws WorkflowException {
-        // do nothing
-    }
-
 }
