@@ -1,28 +1,24 @@
 package edu.unc.mapseq.workflow.ncgenes.dx;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.apache.commons.lang.StringUtils;
 import org.jgrapht.DirectedGraph;
 import org.jgrapht.Graph;
 import org.jgrapht.graph.DefaultDirectedGraph;
-import org.renci.common.exec.BashExecutor;
-import org.renci.common.exec.CommandInput;
-import org.renci.common.exec.CommandOutput;
-import org.renci.common.exec.Executor;
-import org.renci.common.exec.ExecutorException;
 import org.renci.jlrm.condor.CondorJob;
 import org.renci.jlrm.condor.CondorJobBuilder;
 import org.renci.jlrm.condor.CondorJobEdge;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import edu.unc.mapseq.config.RunModeType;
+import edu.unc.mapseq.commons.ncgenes.dx.RegisterToIRODSRunnable;
 import edu.unc.mapseq.dao.MaPSeqDAOException;
 import edu.unc.mapseq.dao.model.Attribute;
 import edu.unc.mapseq.dao.model.FileData;
@@ -46,7 +42,6 @@ import edu.unc.mapseq.module.samtools.SAMToolsViewCLI;
 import edu.unc.mapseq.workflow.WorkflowException;
 import edu.unc.mapseq.workflow.WorkflowUtil;
 import edu.unc.mapseq.workflow.impl.AbstractSampleWorkflow;
-import edu.unc.mapseq.workflow.impl.IRODSBean;
 import edu.unc.mapseq.workflow.impl.WorkflowJobFactory;
 
 public class NCGenesDXWorkflow extends AbstractSampleWorkflow {
@@ -106,7 +101,7 @@ public class NCGenesDXWorkflow extends AbstractSampleWorkflow {
 
             logger.debug(sample.toString());
 
-            File outputDirectory = new File(sample.getOutputDirectory(), getName().replace("DX", ""));
+            File outputDirectory = new File(sample.getOutputDirectory(), getName());
             File tmpDirectory = new File(outputDirectory, "tmp");
             tmpDirectory.mkdirs();
 
@@ -302,31 +297,18 @@ public class NCGenesDXWorkflow extends AbstractSampleWorkflow {
 
         Set<Sample> sampleSet = getAggregatedSamples();
 
-        RunModeType runMode = getWorkflowBeanService().getMaPSeqConfigurationService().getRunMode();
-
         String dx = null;
         String version = null;
 
-        Workflow ncgenesWorkflow = null;
-        try {
-            ncgenesWorkflow = getWorkflowBeanService().getMaPSeqDAOBean().getWorkflowDAO().findByName("NCGenes").get(0);
-        } catch (MaPSeqDAOException e1) {
-            e1.printStackTrace();
-        }
-
         WorkflowRunAttempt attempt = getWorkflowRunAttempt();
         WorkflowRun workflowRun = attempt.getWorkflowRun();
+
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
 
         for (Sample sample : sampleSet) {
 
             if ("Undetermined".equals(sample.getBarcode())) {
                 continue;
-            }
-
-            File outputDirectory = new File(sample.getOutputDirectory());
-            File tmpDir = new File(outputDirectory, "tmp");
-            if (!tmpDir.exists()) {
-                tmpDir.mkdirs();
             }
 
             Set<Attribute> attributeSet = workflowRun.getAttributes();
@@ -342,179 +324,14 @@ public class NCGenesDXWorkflow extends AbstractSampleWorkflow {
                     }
                 }
             }
-            if (version == null && dx == null) {
-                logger.warn("Both version and DX were null...returning empty dag");
-                return;
-            }
 
-            Integer laneIndex = sample.getLaneIndex();
-            logger.debug("laneIndex = {}", laneIndex);
-            Set<FileData> fileDataSet = sample.getFileDatas();
-
-            // assumption: a dash is used as a delimiter between a participantId and the external code
-            int idx = sample.getName().lastIndexOf("-");
-            String participantId = idx != -1 ? sample.getName().substring(0, idx) : sample.getName();
-
-            File bamFile = null;
-
-            List<File> potentialBAMFileList = WorkflowUtil.lookupFileByJobAndMimeTypeAndWorkflowId(fileDataSet,
-                    getWorkflowBeanService().getMaPSeqDAOBean(), GATKTableRecalibration.class,
-                    MimeType.APPLICATION_BAM, ncgenesWorkflow.getId());
-
-            // assume that only one GATKTableRecalibration job exists
-            if (potentialBAMFileList.size() > 0) {
-                bamFile = potentialBAMFileList.get(0);
-            }
-
-            if (bamFile == null) {
-                logger.error("bam file to process was not found");
-                throw new WorkflowException("bam file to process was not found");
-            }
-
-            String irodsHome = System.getenv("NCGENES_IRODS_HOME");
-            if (StringUtils.isEmpty(irodsHome)) {
-                logger.error("irodsHome is not set");
-                return;
-            }
-
-            String ncgenesIRODSDirectory;
-
-            switch (runMode) {
-                case DEV:
-                case STAGING:
-                    ncgenesIRODSDirectory = String.format("/genomicsDataGridZone/sequence_data/%s/ncgenes/%s/%s",
-                            runMode.toString().toLowerCase(), participantId, version);
-                    break;
-                case PROD:
-                default:
-                    ncgenesIRODSDirectory = String.format("/genomicsDataGridZone/sequence_data/ncgenes/%s/%s",
-                            participantId, version);
-                    break;
-            }
-
-            CommandOutput commandOutput = null;
-
-            List<CommandInput> commandInputList = new ArrayList<CommandInput>();
-
-            CommandInput commandInput = new CommandInput();
-            commandInput.setCommand(String.format("%s/bin/imkdir -p %s", irodsHome, ncgenesIRODSDirectory));
-            commandInput.setWorkDir(tmpDir);
-            commandInputList.add(commandInput);
-
-            commandInput = new CommandInput();
-            commandInput.setCommand(String.format("%s/bin/imeta add -C %s Project NCGENES", irodsHome,
-                    ncgenesIRODSDirectory));
-            commandInput.setWorkDir(tmpDir);
-            commandInputList.add(commandInput);
-
-            commandInput = new CommandInput();
-            commandInput.setCommand(String.format("%s/bin/imeta add -C %s ParticipantID %s NCGENES", irodsHome,
-                    ncgenesIRODSDirectory, participantId));
-            commandInput.setWorkDir(tmpDir);
-            commandInputList.add(commandInput);
-
-            List<IRODSBean> files2RegisterToIRODS = new ArrayList<IRODSBean>();
-
-            files2RegisterToIRODS.add(new IRODSBean(new File(outputDirectory, bamFile.getName().replace(".bam",
-                    String.format(".coverage.v%s.gene.sample_cumulative_coverage_counts", version))),
-                    "GeneCoverageCount", version, null, runMode));
-            files2RegisterToIRODS.add(new IRODSBean(new File(outputDirectory, bamFile.getName().replace(".bam",
-                    String.format(".coverage.v%s.gene.sample_cumulative_coverage_proportions", version))),
-                    "GeneCoverageProportions", version, null, runMode));
-            files2RegisterToIRODS.add(new IRODSBean(new File(outputDirectory, bamFile.getName().replace(".bam",
-                    String.format(".coverage.v%s.gene.sample_interval_statistics", version))),
-                    "GeneIntervalStatistics", version, null, runMode));
-            files2RegisterToIRODS.add(new IRODSBean(new File(outputDirectory, bamFile.getName().replace(".bam",
-                    String.format(".coverage.v%s.gene.sample_interval_summary", version))), "GeneIntervalSummary",
-                    version, null, runMode));
-            files2RegisterToIRODS.add(new IRODSBean(new File(outputDirectory, bamFile.getName().replace(".bam",
-                    String.format(".coverage.v%s.gene.sample_statistics", version))), "GeneSampleStatistics", version,
-                    null, runMode));
-            files2RegisterToIRODS.add(new IRODSBean(new File(outputDirectory, bamFile.getName().replace(".bam",
-                    String.format(".coverage.v%s.gene.sample_summary", version))), "GeneSampleSummary", version, null,
-                    runMode));
-
-            File samtoolsViewOutput = new File(outputDirectory, bamFile.getName().replace(".bam", ".filtered.bam"));
-            File picardSortOutput = new File(outputDirectory, samtoolsViewOutput.getName().replace(".bam",
-                    String.format(".sorted.filtered_by_dxid_%s_v%s.bam", dx, version)));
-            File picardSortSAMIndexOut = new File(outputDirectory, picardSortOutput.getName().replace(".bam", ".bai"));
-            files2RegisterToIRODS.add(new IRODSBean(picardSortSAMIndexOut, "FilteredBamIndex", version, dx, runMode));
-
-            File zipOutputFile = new File(outputDirectory, picardSortOutput.getName().replace(".bam", ".zip"));
-            files2RegisterToIRODS.add(new IRODSBean(zipOutputFile, "FilteredBamZip", version, dx, runMode));
-
-            File filterVariantOutput = new File(outputDirectory, bamFile.getName().replace(".bam",
-                    String.format(".filtered_by_dxid_%s_v%s.vcf", dx, version)));
-            files2RegisterToIRODS.add(new IRODSBean(filterVariantOutput, "FilteredVcf", version, dx, runMode));
-
-            for (IRODSBean bean : files2RegisterToIRODS) {
-
-                commandInput = new CommandInput();
-                commandInput.setExitImmediately(Boolean.FALSE);
-
-                StringBuilder registerCommandSB = new StringBuilder();
-                String registrationCommand = String.format("%s/bin/ireg -f %s %s/%s", irodsHome, bean.getFile()
-                        .getAbsolutePath(), ncgenesIRODSDirectory, bean.getFile().getName());
-                String deRegistrationCommand = String.format("%s/bin/irm -U %s/%s", irodsHome, ncgenesIRODSDirectory,
-                        bean.getFile().getName());
-                registerCommandSB.append(registrationCommand).append("\n");
-                registerCommandSB.append(String.format("if [ $? != 0 ]; then %s; %s; fi%n", deRegistrationCommand,
-                        registrationCommand));
-                commandInput.setCommand(registerCommandSB.toString());
-                commandInput.setWorkDir(tmpDir);
-                commandInputList.add(commandInput);
-
-                commandInput = new CommandInput();
-                commandInput.setCommand(String.format("%s/bin/imeta add -d %s/%s ParticipantID %s NCGENES", irodsHome,
-                        ncgenesIRODSDirectory, bean.getFile().getName(), participantId));
-                commandInput.setWorkDir(tmpDir);
-                commandInputList.add(commandInput);
-
-                commandInput = new CommandInput();
-                commandInput.setCommand(String.format("%s/bin/imeta add -d %s/%s FileType %s NCGENES", irodsHome,
-                        ncgenesIRODSDirectory, bean.getFile().getName(), bean.getType()));
-                commandInput.setWorkDir(tmpDir);
-                commandInputList.add(commandInput);
-
-                if (StringUtils.isNotEmpty(bean.getDx())) {
-                    commandInput = new CommandInput();
-                    commandInput.setCommand(String.format("%s/bin/imeta add -d %s/%s DxID %s NCGENES", irodsHome,
-                            ncgenesIRODSDirectory, bean.getFile().getName(), bean.getDx()));
-                    commandInput.setWorkDir(tmpDir);
-                    commandInputList.add(commandInput);
-                }
-
-                if (StringUtils.isNotEmpty(bean.getVersion())) {
-                    commandInput = new CommandInput();
-                    commandInput.setCommand(String.format("%s/bin/imeta add -d %s/%s DxVersion %s NCGENES", irodsHome,
-                            ncgenesIRODSDirectory, bean.getFile().getName(), bean.getVersion()));
-                    commandInput.setWorkDir(tmpDir);
-                    commandInputList.add(commandInput);
-                }
-
-                commandInput = new CommandInput();
-                commandInput.setCommand(String.format("%s/bin/imeta add -d %s/%s System %s NCGENES", irodsHome,
-                        ncgenesIRODSDirectory, bean.getFile().getName(),
-                        StringUtils.capitalize(bean.getRunMode().toString().toLowerCase())));
-                commandInput.setWorkDir(tmpDir);
-                commandInputList.add(commandInput);
-
-            }
-
-            File mapseqrc = new File(System.getProperty("user.home"), ".mapseqrc");
-            Executor executor = BashExecutor.getInstance();
-
-            for (CommandInput ci : commandInputList) {
-                try {
-                    commandOutput = executor.execute(ci, mapseqrc);
-                    logger.info("commandOutput.getExitCode(): {}", commandOutput.getExitCode());
-                    logger.debug("commandOutput.getStdout(): {}", commandOutput.getStdout());
-                } catch (ExecutorException e) {
-                    if (commandOutput != null) {
-                        logger.warn("commandOutput.getStderr(): {}", commandOutput.getStderr());
-                    }
-                }
-            }
+            RegisterToIRODSRunnable runnable = new RegisterToIRODSRunnable();
+            runnable.setMaPSeqDAOBean(getWorkflowBeanService().getMaPSeqDAOBean());
+            runnable.setMaPSeqConfigurationService(getWorkflowBeanService().getMaPSeqConfigurationService());
+            runnable.setSampleId(sample.getId());
+            runnable.setDx(dx);
+            runnable.setVersion(version);
+            executorService.submit(runnable);
 
         }
 
