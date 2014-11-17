@@ -23,6 +23,10 @@
       <groupId>edu.unc.mapseq.distribution</groupId>
       <artifactId>mapseq-modules</artifactId>
     </dependency>
+    <dependency>
+      <groupId>edu.unc.mapseq.pipelines.ncgenes-dx</groupId>
+      <artifactId>ncgenes-dx-commons</artifactId>
+    </dependency>
   </dependencies>
   <build>
     <plugins>
@@ -56,49 +60,6 @@
             <Export-Package>edu.unc.mapseq.workflow.ncgenes.dx*</Export-Package>
             <Import-Package>*</Import-Package>
           </instructions>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-site-plugin</artifactId>
-        <version>${maven.site.plugin.version}</version>
-        <configuration>
-          <reportPlugins>
-            <plugin>
-              <groupId>org.apache.maven.plugins</groupId>
-              <artifactId>maven-project-info-reports-plugin</artifactId>
-              <version>${maven.project.info.reports.plugin.version}</version>
-              <configuration>
-                <dependencyDetailsEnabled>false</dependencyDetailsEnabled>
-                <dependencyLocationsEnabled>false</dependencyLocationsEnabled>
-              </configuration>
-              <reports>
-              </reports>
-            </plugin>
-            <plugin>
-              <groupId>org.apache.maven.plugins</groupId>
-              <artifactId>maven-javadoc-plugin</artifactId>
-              <version>${maven.javadoc.plugin.version}</version>
-            </plugin>
-            <plugin>
-              <groupId>org.apache.maven.plugins</groupId>
-              <artifactId>maven-jxr-plugin</artifactId>
-              <version>${maven.jxr.plugin.version}</version>
-              <configuration>
-                <aggregate>true</aggregate>
-              </configuration>
-            </plugin>
-            <plugin>
-              <groupId>org.apache.maven.plugins</groupId>
-              <artifactId>maven-surefire-report-plugin</artifactId>
-              <version>${maven.surefire.report.plugin.version}</version>
-            </plugin>
-            <plugin>
-              <groupId>org.apache.maven.plugins</groupId>
-              <artifactId>maven-checkstyle-plugin</artifactId>
-              <version>${maven.checkstyle.plugin.version}</version>
-            </plugin>
-          </reportPlugins>
         </configuration>
       </plugin>
     </plugins>

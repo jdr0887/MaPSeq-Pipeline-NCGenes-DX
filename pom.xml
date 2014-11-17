@@ -35,9 +35,15 @@
       	<artifactId>ncgenes-dx-workflow</artifactId>
       	<version>0.5.36-SNAPSHOT</version>
       </dependency>
+      <dependency>
+	<groupId>edu.unc.mapseq.pipelines.ncgenes-dx</groupId>
+	<artifactId>ncgenes-dx-commons</artifactId>
+	<version>0.5.36-SNAPSHOT</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
   <modules>
+    <module>ncgenes-dx-commons</module>
     <module>ncgenes-dx-workflow</module>
     <module>ncgenes-dx-executor</module>
     <module>ncgenes-dx-commands</module>
