@@ -1,6 +1,7 @@
 <features name="mapseq-pipeline-ncgenes-dx-${project.version}" xmlns="http://karaf.apache.org/xmlns/features/v1.2.0">
 
   <feature name="mapseq-pipeline-ncgenes-dx" version="${project.version}" resolver="(obr)">
+    <bundle>mvn:edu.unc.mapseq.pipelines.ncgenes-dx/ncgenes-dx-commons/${project.version}</bundle>
     <bundle>mvn:edu.unc.mapseq.pipelines.ncgenes-dx/ncgenes-dx-workflow/${project.version}</bundle>
     <bundle>mvn:edu.unc.mapseq.pipelines.ncgenes-dx/ncgenes-dx-commands/${project.version}</bundle>
     <bundle start-level="100">mvn:edu.unc.mapseq.pipelines.ncgenes-dx/ncgenes-dx-executor/${project.version}</bundle>
