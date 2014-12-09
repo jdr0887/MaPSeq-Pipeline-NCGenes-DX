@@ -1,6 +1,7 @@
 package edu.unc.mapseq.workflow.ncgenes.dx;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ResourceBundle;
@@ -266,6 +267,19 @@ public class NCGenesDXWorkflow extends AbstractSampleWorkflow {
                 }
 
                 if (gatkApplyRecalibrationOut == null) {
+                    File ncgenesOutputDirectory = new File(sample.getOutputDirectory(), "NCGenes");
+                    List<File> files = Arrays.asList(ncgenesOutputDirectory.listFiles());
+                    if (files != null && !files.isEmpty()) {
+                        for (File f : files) {
+                            if (f.getName().endsWith(".recalibrated.filtered.vcf")) {
+                                gatkApplyRecalibrationOut = f;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (gatkApplyRecalibrationOut == null) {
                     logger.error("gatkApplyRecalibrationOut file to process was not found");
                     throw new WorkflowException("gatkApplyRecalibrationOut file to process was not found");
                 }
@@ -334,6 +348,7 @@ public class NCGenesDXWorkflow extends AbstractSampleWorkflow {
             executorService.submit(runnable);
 
         }
+        executorService.shutdown();
 
     }
 
