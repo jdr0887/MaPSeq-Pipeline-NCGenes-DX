@@ -153,8 +153,17 @@ public class NCGenesDXWorkflow extends AbstractSampleWorkflow {
                     MimeType.APPLICATION_BAM, ncgenesWorkflow.getId());
 
             // assume that only one GATKTableRecalibration job exists
-            if (potentialBAMFileList.size() > 0) {
+            if (!potentialBAMFileList.isEmpty()) {
                 bamFile = potentialBAMFileList.get(0);
+            }
+
+            File ncgenesDirectory = new File(sample.getOutputDirectory(), "NCGenes");
+
+            for (File file : ncgenesDirectory.listFiles()) {
+                if (file.getName().endsWith(".recal.bam")) {
+                    bamFile = file;
+                    break;
+                }
             }
 
             if (bamFile == null) {
@@ -166,7 +175,7 @@ public class NCGenesDXWorkflow extends AbstractSampleWorkflow {
                     getWorkflowBeanService().getMaPSeqDAOBean(), SAMToolsIndex.class, MimeType.APPLICATION_BAM_INDEX,
                     ncgenesWorkflow.getId());
 
-            if (potentialBAMIndexFileList.size() > 0) {
+            if (!potentialBAMIndexFileList.isEmpty()) {
                 for (File file : potentialBAMIndexFileList) {
                     if (bamFile != null && bamFile.getName().replace(".bam", ".bai").equals(file.getName())) {
                         bamIndexFile = file;
