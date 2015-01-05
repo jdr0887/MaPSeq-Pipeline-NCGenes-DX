@@ -22,8 +22,8 @@ import edu.unc.mapseq.dao.SampleDAO;
 import edu.unc.mapseq.dao.StudyDAO;
 import edu.unc.mapseq.dao.model.Sample;
 import edu.unc.mapseq.dao.model.Study;
-import edu.unc.mapseq.workflow.WorkflowUtil;
 import edu.unc.mapseq.workflow.impl.IRODSBean;
+import edu.unc.mapseq.workflow.impl.WorkflowUtil;
 
 public class RegisterToIRODSMigrationRunnable implements Runnable {
 

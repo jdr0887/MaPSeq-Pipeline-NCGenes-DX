@@ -20,8 +20,8 @@ import edu.unc.mapseq.dao.MaPSeqDAOBean;
 import edu.unc.mapseq.dao.MaPSeqDAOException;
 import edu.unc.mapseq.dao.model.Flowcell;
 import edu.unc.mapseq.dao.model.Sample;
-import edu.unc.mapseq.workflow.WorkflowUtil;
 import edu.unc.mapseq.workflow.impl.IRODSBean;
+import edu.unc.mapseq.workflow.impl.WorkflowUtil;
 
 public class RegisterToIRODSRunnable implements Runnable {
 
@@ -122,46 +122,49 @@ public class RegisterToIRODSRunnable implements Runnable {
 
         File bwaSAMPairedEndOutFile = new File(ncgenesOutputDirectory, fastqLaneRootName + ".sam");
 
-        File fixRGOutput = new File(ncgenesOutputDirectory, bwaSAMPairedEndOutFile.getName().replace(".sam", ".fixed-rg.bam"));
+        File fixRGOutput = new File(ncgenesOutputDirectory, bwaSAMPairedEndOutFile.getName().replace(".sam",
+                ".fixed-rg.bam"));
         File picardMarkDuplicatesOutput = new File(ncgenesOutputDirectory, fixRGOutput.getName().replace(".bam",
                 ".deduped.bam"));
         File indelRealignerOut = new File(ncgenesOutputDirectory, picardMarkDuplicatesOutput.getName().replace(".bam",
                 ".realign.bam"));
-        File picardFixMateOutput = new File(ncgenesOutputDirectory, indelRealignerOut.getName()
-                .replace(".bam", ".fixmate.bam"));
+        File picardFixMateOutput = new File(ncgenesOutputDirectory, indelRealignerOut.getName().replace(".bam",
+                ".fixmate.bam"));
         File gatkTableRecalibrationOut = new File(ncgenesOutputDirectory, picardFixMateOutput.getName().replace(".bam",
                 ".recal.bam"));
 
-        files2RegisterToIRODS.add(new IRODSBean(new File(ncgenesDXOutputDirectory, gatkTableRecalibrationOut.getName().replace(
-                ".bam", String.format(".coverage.v%s.gene.sample_cumulative_coverage_counts", version))),
+        files2RegisterToIRODS.add(new IRODSBean(new File(ncgenesDXOutputDirectory, gatkTableRecalibrationOut.getName()
+                .replace(".bam", String.format(".coverage.v%s.gene.sample_cumulative_coverage_counts", version))),
                 "GeneCoverageCount", version, null, runMode));
-        files2RegisterToIRODS.add(new IRODSBean(new File(ncgenesDXOutputDirectory, gatkTableRecalibrationOut.getName().replace(
-                ".bam", String.format(".coverage.v%s.gene.sample_cumulative_coverage_proportions", version))),
+        files2RegisterToIRODS.add(new IRODSBean(new File(ncgenesDXOutputDirectory, gatkTableRecalibrationOut.getName()
+                .replace(".bam", String.format(".coverage.v%s.gene.sample_cumulative_coverage_proportions", version))),
                 "GeneCoverageProportions", version, null, runMode));
-        files2RegisterToIRODS.add(new IRODSBean(new File(ncgenesDXOutputDirectory, gatkTableRecalibrationOut.getName().replace(
-                ".bam", String.format(".coverage.v%s.gene.sample_interval_statistics", version))),
+        files2RegisterToIRODS.add(new IRODSBean(new File(ncgenesDXOutputDirectory, gatkTableRecalibrationOut.getName()
+                .replace(".bam", String.format(".coverage.v%s.gene.sample_interval_statistics", version))),
                 "GeneIntervalStatistics", version, null, runMode));
-        files2RegisterToIRODS.add(new IRODSBean(new File(ncgenesDXOutputDirectory, gatkTableRecalibrationOut.getName().replace(
-                ".bam", String.format(".coverage.v%s.gene.sample_interval_summary", version))), "GeneIntervalSummary",
+        files2RegisterToIRODS.add(new IRODSBean(new File(ncgenesDXOutputDirectory, gatkTableRecalibrationOut.getName()
+                .replace(".bam", String.format(".coverage.v%s.gene.sample_interval_summary", version))),
+                "GeneIntervalSummary", version, null, runMode));
+        files2RegisterToIRODS.add(new IRODSBean(new File(ncgenesDXOutputDirectory, gatkTableRecalibrationOut.getName()
+                .replace(".bam", String.format(".coverage.v%s.gene.sample_statistics", version))),
+                "GeneSampleStatistics", version, null, runMode));
+        files2RegisterToIRODS.add(new IRODSBean(new File(ncgenesDXOutputDirectory, gatkTableRecalibrationOut.getName()
+                .replace(".bam", String.format(".coverage.v%s.gene.sample_summary", version))), "GeneSampleSummary",
                 version, null, runMode));
-        files2RegisterToIRODS.add(new IRODSBean(new File(ncgenesDXOutputDirectory, gatkTableRecalibrationOut.getName().replace(
-                ".bam", String.format(".coverage.v%s.gene.sample_statistics", version))), "GeneSampleStatistics",
-                version, null, runMode));
-        files2RegisterToIRODS.add(new IRODSBean(new File(ncgenesDXOutputDirectory, gatkTableRecalibrationOut.getName().replace(
-                ".bam", String.format(".coverage.v%s.gene.sample_summary", version))), "GeneSampleSummary", version,
-                null, runMode));
 
-        File samtoolsViewOutput = new File(ncgenesDXOutputDirectory, gatkTableRecalibrationOut.getName().replace(".bam",
-                String.format(".filtered_by_dxid_%s_v%s.bam", dx, version)));
-        File picardSortOutput = new File(ncgenesDXOutputDirectory, samtoolsViewOutput.getName().replace(".bam", ".sorted.bam"));
-        File picardSortSAMIndexOut = new File(ncgenesDXOutputDirectory, picardSortOutput.getName().replace(".bam", ".bai"));
+        File samtoolsViewOutput = new File(ncgenesDXOutputDirectory, gatkTableRecalibrationOut.getName().replace(
+                ".bam", String.format(".filtered_by_dxid_%s_v%s.bam", dx, version)));
+        File picardSortOutput = new File(ncgenesDXOutputDirectory, samtoolsViewOutput.getName().replace(".bam",
+                ".sorted.bam"));
+        File picardSortSAMIndexOut = new File(ncgenesDXOutputDirectory, picardSortOutput.getName().replace(".bam",
+                ".bai"));
         files2RegisterToIRODS.add(new IRODSBean(picardSortSAMIndexOut, "FilteredBamIndex", version, dx, runMode));
 
         File zipOutputFile = new File(ncgenesDXOutputDirectory, picardSortOutput.getName().replace(".bam", ".zip"));
         files2RegisterToIRODS.add(new IRODSBean(zipOutputFile, "FilteredBamZip", version, dx, runMode));
 
-        File filterVariantOutput = new File(ncgenesDXOutputDirectory, gatkTableRecalibrationOut.getName().replace(".bam",
-                String.format(".filtered_by_dxid_%s_v%s.vcf", dx, version)));
+        File filterVariantOutput = new File(ncgenesDXOutputDirectory, gatkTableRecalibrationOut.getName().replace(
+                ".bam", String.format(".filtered_by_dxid_%s_v%s.vcf", dx, version)));
         files2RegisterToIRODS.add(new IRODSBean(filterVariantOutput, "FilteredVcf", version, dx, runMode));
 
         for (IRODSBean bean : files2RegisterToIRODS) {
