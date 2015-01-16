@@ -2,13 +2,13 @@
   <parent>
     <groupId>edu.unc.mapseq.pipelines</groupId>
     <artifactId>ncgenes-dx</artifactId>
-    <version>0.5.40-SNAPSHOT</version>
+    <version>0.5.40</version>
   </parent>
   <name>MaPSeq :: Pipelines :: NCGenes DX :: Workflow</name>
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.unc.mapseq.pipelines.ncgenes-dx</groupId>
   <artifactId>ncgenes-dx-workflow</artifactId>
-  <version>0.5.40-SNAPSHOT</version>
+  <version>0.5.40</version>
   <packaging>bundle</packaging>
   <dependencies>
     <dependency>
