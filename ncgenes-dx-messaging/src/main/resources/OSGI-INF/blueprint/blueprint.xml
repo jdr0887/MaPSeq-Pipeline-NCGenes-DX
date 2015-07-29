@@ -4,15 +4,15 @@
 
   <reference id="connectionFactory" interface="javax.jms.ConnectionFactory" />
 
-  <reference id="NCGenesDXWorkflowBeanService" interface="edu.unc.mapseq.workflow.WorkflowBeanService"
-    component-name="NCGenesDXWorkflowBeanService" />
+  <reference id="NCGenesDXWorkflowBeanService" interface="edu.unc.mapseq.workflow.WorkflowBeanService" component-name="NCGenesDXWorkflowBeanService" />
 
   <bean id="NCGenesDXMessageListener" class="edu.unc.mapseq.messaging.ncgenes.dx.NCGenesDXMessageListener">
     <property name="workflowBeanService" ref="NCGenesDXWorkflowBeanService" />
+    <property name="workflowName" value="NCGenesDX" />
   </bean>
 
-  <bean id="NCGenesDXMessageService" class="edu.unc.mapseq.messaging.ncgenes.dx.NCGenesDXMessageService"
-    init-method="start" destroy-method="stop" activation="eager">
+  <bean id="NCGenesDXMessageService" class="edu.unc.mapseq.messaging.ncgenes.dx.NCGenesDXMessageService" init-method="start"
+    destroy-method="stop" activation="eager">
     <property name="connectionFactory" ref="connectionFactory" />
     <property name="messageListener" ref="NCGenesDXMessageListener" />
     <property name="destinationName" value="queue/ncgenes.dx" />
