@@ -13,6 +13,11 @@
   <bannerLeft>
     <name>${project.name}</name>
   </bannerLeft>
+  <bannerRight>
+    <name>RENCI</name>
+    <href>http://www.renci.org</href>
+    <src>images/renci-logo.png</src>
+  </bannerRight>  
   <body>
     <menu name="Overview">
       <item name="About" href="index.html"/>
