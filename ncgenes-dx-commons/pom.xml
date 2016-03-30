@@ -28,17 +28,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.karaf.shell</groupId>
-      <artifactId>org.apache.karaf.shell.console</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.felix</groupId>
-      <artifactId>org.apache.felix.gogo.runtime</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.karaf</groupId>
-      <artifactId>org.apache.karaf.util</artifactId>
-      <scope>provided</scope>
+      <artifactId>org.apache.karaf.shell.core</artifactId>
     </dependency>
     <dependency>
       <groupId>org.osgi</groupId>
@@ -79,8 +69,8 @@
         <configuration>
           <instructions>
             <Private-Package />
-            <Export-Package>edu.unc.mapseq.commons*</Export-Package>
-            <Import-Package>org.apache.felix.service.command,org.apache.felix.gogo.commands,org.apache.karaf.shell.console,*</Import-Package>
+            <Export-Package>edu.unc.mapseq.commons.ncgenes.dx*</Export-Package>
+            <Import-Package>*</Import-Package>
           </instructions>
         </configuration>
       </plugin>
