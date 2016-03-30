@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import edu.unc.mapseq.dao.MaPSeqDAOBean;
+import edu.unc.mapseq.dao.MaPSeqDAOBeanService;
 import edu.unc.mapseq.dao.MaPSeqDAOException;
 import edu.unc.mapseq.dao.WorkflowDAO;
 import edu.unc.mapseq.dao.WorkflowRunAttemptDAO;
@@ -23,12 +23,12 @@ import edu.unc.mapseq.dao.model.WorkflowRun;
 import edu.unc.mapseq.dao.model.WorkflowRunAttempt;
 import edu.unc.mapseq.dao.model.WorkflowRunAttemptStatusType;
 import edu.unc.mapseq.workflow.WorkflowException;
-import edu.unc.mapseq.workflow.impl.AbstractMessageListener;
+import edu.unc.mapseq.workflow.impl.AbstractSampleMessageListener;
 import edu.unc.mapseq.workflow.model.WorkflowMessage;
 
-public class NCGenesDXMessageListener extends AbstractMessageListener {
+public class NCGenesDXMessageListener extends AbstractSampleMessageListener {
 
-    private final Logger logger = LoggerFactory.getLogger(NCGenesDXMessageListener.class);
+    private static final Logger logger = LoggerFactory.getLogger(NCGenesDXMessageListener.class);
 
     public NCGenesDXMessageListener() {
         super();
@@ -71,7 +71,7 @@ public class NCGenesDXMessageListener extends AbstractMessageListener {
             return;
         }
 
-        MaPSeqDAOBean daoBean = getWorkflowBeanService().getMaPSeqDAOBean();
+        MaPSeqDAOBeanService daoBean = getWorkflowBeanService().getMaPSeqDAOBeanService();
         WorkflowDAO workflowDAO = daoBean.getWorkflowDAO();
         WorkflowRunDAO workflowRunDAO = daoBean.getWorkflowRunDAO();
         WorkflowRunAttemptDAO workflowRunAttemptDAO = daoBean.getWorkflowRunAttemptDAO();

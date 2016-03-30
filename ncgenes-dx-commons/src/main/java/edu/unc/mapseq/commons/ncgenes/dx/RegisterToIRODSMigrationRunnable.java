@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.renci.common.exec.BashExecutor;
 import org.renci.common.exec.CommandInput;
@@ -16,20 +17,20 @@ import org.slf4j.LoggerFactory;
 
 import edu.unc.mapseq.config.MaPSeqConfigurationService;
 import edu.unc.mapseq.config.RunModeType;
-import edu.unc.mapseq.dao.MaPSeqDAOBean;
+import edu.unc.mapseq.dao.MaPSeqDAOBeanService;
 import edu.unc.mapseq.dao.MaPSeqDAOException;
 import edu.unc.mapseq.dao.SampleDAO;
 import edu.unc.mapseq.dao.StudyDAO;
 import edu.unc.mapseq.dao.model.Sample;
 import edu.unc.mapseq.dao.model.Study;
 import edu.unc.mapseq.workflow.impl.IRODSBean;
-import edu.unc.mapseq.workflow.impl.WorkflowUtil;
+import edu.unc.mapseq.workflow.impl.SampleWorkflowUtil;
 
 public class RegisterToIRODSMigrationRunnable implements Runnable {
 
-    private final Logger logger = LoggerFactory.getLogger(RegisterToIRODSMigrationRunnable.class);
+    private static final Logger logger = LoggerFactory.getLogger(RegisterToIRODSMigrationRunnable.class);
 
-    private MaPSeqDAOBean maPSeqDAOBean;
+    private MaPSeqDAOBeanService maPSeqDAOBeanService;
 
     private MaPSeqConfigurationService maPSeqConfigurationService;
 
@@ -40,15 +41,15 @@ public class RegisterToIRODSMigrationRunnable implements Runnable {
 
         RunModeType runMode = getMaPSeqConfigurationService().getRunMode();
 
-        SampleDAO sampleDAO = maPSeqDAOBean.getSampleDAO();
-        StudyDAO studyDAO = maPSeqDAOBean.getStudyDAO();
+        SampleDAO sampleDAO = maPSeqDAOBeanService.getSampleDAO();
+        StudyDAO studyDAO = maPSeqDAOBeanService.getStudyDAO();
 
         try {
             Study study = studyDAO.findByName("NC_GENES").get(0);
 
             List<Sample> samples = sampleDAO.findByFlowcellId(flowcellId);
 
-            if (samples != null && !samples.isEmpty()) {
+            if (CollectionUtils.isNotEmpty(samples)) {
 
                 for (Sample sample : samples) {
 
@@ -64,17 +65,16 @@ public class RegisterToIRODSMigrationRunnable implements Runnable {
                         tmpDir.mkdirs();
                     }
 
-                    List<File> readPairList = WorkflowUtil.getReadPairList(sample.getFileDatas(), sample.getFlowcell()
-                            .getName(), sample.getLaneIndex());
+                    List<File> readPairList = SampleWorkflowUtil.getReadPairList(sample);
 
                     int idx = sample.getName().lastIndexOf("-");
                     String participantId = idx != -1 ? sample.getName().substring(0, idx) : sample.getName();
 
                     File r1FastqFile = readPairList.get(0);
-                    String r1FastqRootName = WorkflowUtil.getRootFastqName(r1FastqFile.getName());
+                    String r1FastqRootName = SampleWorkflowUtil.getRootFastqName(r1FastqFile.getName());
 
                     File r2FastqFile = readPairList.get(1);
-                    String r2FastqRootName = WorkflowUtil.getRootFastqName(r2FastqFile.getName());
+                    String r2FastqRootName = SampleWorkflowUtil.getRootFastqName(r2FastqFile.getName());
 
                     String fastqLaneRootName = StringUtils.removeEnd(r2FastqRootName, "_R2");
 
@@ -94,14 +94,13 @@ public class RegisterToIRODSMigrationRunnable implements Runnable {
                         switch (runMode) {
                             case DEV:
                             case STAGING:
-                                ncgenesIRODSDirectory = String.format(
-                                        "/genomicsDataGridZone/sequence_data/%s/ncgenes/%s/%s", runMode.toString()
-                                                .toLowerCase(), participantId, version);
+                                ncgenesIRODSDirectory = String.format("/MedGenZone/home/medgenuser/sequence_data/%s/ncgenes/%s/%s",
+                                        runMode.toString().toLowerCase(), participantId, version);
                                 break;
                             case PROD:
                             default:
-                                ncgenesIRODSDirectory = String.format(
-                                        "/genomicsDataGridZone/sequence_data/ncgenes/%s/%s", participantId, version);
+                                ncgenesIRODSDirectory = String.format("/MedGenZone/home/medgenuser/sequence_data/ncgenes/%s/%s", participantId,
+                                        version);
                                 break;
                         }
 
@@ -113,26 +112,22 @@ public class RegisterToIRODSMigrationRunnable implements Runnable {
                         commandInput.setExitImmediately(Boolean.FALSE);
                         StringBuilder sb = new StringBuilder();
                         sb.append(String.format("%s/bin/imkdir -p %s%n", irodsHome, ncgenesIRODSDirectory));
-                        sb.append(String.format("%s/bin/imeta add -C %s Project NCGENES%n", irodsHome,
-                                ncgenesIRODSDirectory));
-                        sb.append(String.format("%s/bin/imeta add -C %s ParticipantID %s NCGENES%n", irodsHome,
-                                ncgenesIRODSDirectory, participantId));
+                        sb.append(String.format("%s/bin/imeta add -C %s Project NCGENES%n", irodsHome, ncgenesIRODSDirectory));
+                        sb.append(String.format("%s/bin/imeta add -C %s ParticipantID %s NCGENES%n", irodsHome, ncgenesIRODSDirectory,
+                                participantId));
                         commandInput.setCommand(sb.toString());
                         commandInput.setWorkDir(tmpDir);
                         commandInputList.add(commandInput);
 
                         File bwaSAMPairedEndOutFile = new File(outputDirectory, fastqLaneRootName + ".sam");
 
-                        File fixRGOutput = new File(outputDirectory, bwaSAMPairedEndOutFile.getName().replace(".sam",
-                                ".fixed-rg.bam"));
-                        File picardMarkDuplicatesOutput = new File(outputDirectory, fixRGOutput.getName().replace(
-                                ".bam", ".deduped.bam"));
-                        File indelRealignerOut = new File(outputDirectory, picardMarkDuplicatesOutput.getName()
-                                .replace(".bam", ".realign.bam"));
-                        File picardFixMateOutput = new File(outputDirectory, indelRealignerOut.getName().replace(
-                                ".bam", ".fixmate.bam"));
-                        File gatkTableRecalibrationOut = new File(outputDirectory, picardFixMateOutput.getName()
-                                .replace(".bam", ".recal.bam"));
+                        File fixRGOutput = new File(outputDirectory, bwaSAMPairedEndOutFile.getName().replace(".sam", ".fixed-rg.bam"));
+                        File picardMarkDuplicatesOutput = new File(outputDirectory, fixRGOutput.getName().replace(".bam", ".deduped.bam"));
+                        File indelRealignerOut = new File(outputDirectory,
+                                picardMarkDuplicatesOutput.getName().replace(".bam", ".realign.bam"));
+                        File picardFixMateOutput = new File(outputDirectory, indelRealignerOut.getName().replace(".bam", ".fixmate.bam"));
+                        File gatkTableRecalibrationOut = new File(outputDirectory,
+                                picardFixMateOutput.getName().replace(".bam", ".recal.bam"));
 
                         File f = new File(outputDirectory, gatkTableRecalibrationOut.getName().replace(".bam",
                                 String.format(".coverage.v%s.gene.sample_cumulative_coverage_counts", version)));
@@ -168,23 +163,21 @@ public class RegisterToIRODSMigrationRunnable implements Runnable {
 
                             String dx = j + "";
 
-                            File samtoolsViewOutput = new File(outputDirectory, gatkTableRecalibrationOut.getName()
-                                    .replace(".bam", ".filtered.bam"));
-                            File picardSortOutput = new File(outputDirectory, samtoolsViewOutput.getName().replace(
-                                    ".bam", String.format(".sorted.filtered_by_dxid_%s_v%s.bam", dx, version)));
-                            File picardSortSAMIndexOut = new File(outputDirectory, picardSortOutput.getName().replace(
-                                    ".bam", ".bai"));
+                            File samtoolsViewOutput = new File(outputDirectory,
+                                    gatkTableRecalibrationOut.getName().replace(".bam", ".filtered.bam"));
+                            File picardSortOutput = new File(outputDirectory, samtoolsViewOutput.getName().replace(".bam",
+                                    String.format(".sorted.filtered_by_dxid_%s_v%s.bam", dx, version)));
+                            File picardSortSAMIndexOut = new File(outputDirectory, picardSortOutput.getName().replace(".bam", ".bai"));
 
                             irodsbean = new IRODSBean(picardSortSAMIndexOut, "FilteredBamIndex", version, dx, runMode);
                             files2RegisterToIRODS.add(irodsbean);
 
-                            File zipOutputFile = new File(outputDirectory, picardSortOutput.getName().replace(".bam",
-                                    ".zip"));
+                            File zipOutputFile = new File(outputDirectory, picardSortOutput.getName().replace(".bam", ".zip"));
                             irodsbean = new IRODSBean(zipOutputFile, "FilteredBamZip", version, dx, runMode);
                             files2RegisterToIRODS.add(irodsbean);
 
-                            File filterVariantOutput = new File(outputDirectory, gatkTableRecalibrationOut.getName()
-                                    .replace(".bam", String.format(".filtered_by_dxid_%s_v%s.vcf", dx, version)));
+                            File filterVariantOutput = new File(outputDirectory, gatkTableRecalibrationOut.getName().replace(".bam",
+                                    String.format(".filtered_by_dxid_%s_v%s.vcf", dx, version)));
                             irodsbean = new IRODSBean(filterVariantOutput, "FilteredVcf", version, dx, runMode);
                             files2RegisterToIRODS.add(irodsbean);
 
@@ -202,13 +195,13 @@ public class RegisterToIRODSMigrationRunnable implements Runnable {
                             commandInput.setExitImmediately(Boolean.FALSE);
 
                             StringBuilder registerCommandSB = new StringBuilder();
-                            String registrationCommand = String.format("%s/bin/ireg -f %s %s/%s", irodsHome,
-                                    f.getAbsolutePath(), ncgenesIRODSDirectory, f.getName());
-                            String deRegistrationCommand = String.format("%s/bin/irm -U %s/%s", irodsHome,
+                            String registrationCommand = String.format("%s/bin/ireg -f %s %s/%s", irodsHome, f.getAbsolutePath(),
                                     ncgenesIRODSDirectory, f.getName());
+                            String deRegistrationCommand = String.format("%s/bin/irm -U %s/%s", irodsHome, ncgenesIRODSDirectory,
+                                    f.getName());
                             registerCommandSB.append(registrationCommand).append("\n");
-                            registerCommandSB.append(String.format("if [ $? != 0 ]; then %s; %s; fi%n",
-                                    deRegistrationCommand, registrationCommand));
+                            registerCommandSB
+                                    .append(String.format("if [ $? != 0 ]; then %s; %s; fi%n", deRegistrationCommand, registrationCommand));
                             commandInput.setCommand(registerCommandSB.toString());
                             commandInput.setWorkDir(tmpDir);
                             commandInputList.add(commandInput);
@@ -218,27 +211,26 @@ public class RegisterToIRODSMigrationRunnable implements Runnable {
                             sb = new StringBuilder();
                             sb.append(String.format("%s/bin/imeta add -d %s/%s ParticipantID %s NCGENES%n", irodsHome,
                                     ncgenesIRODSDirectory, f.getName(), participantId));
-                            sb.append(String.format("%s/bin/imeta add -d %s/%s FileType %s NCGENES%n", irodsHome,
-                                    ncgenesIRODSDirectory, f.getName(), bean.getType()));
-                            sb.append(String.format("%s/bin/imeta add -d %s/%s System %s NCGENES%n", irodsHome,
-                                    ncgenesIRODSDirectory, f.getName(),
-                                    StringUtils.capitalize(bean.getRunMode().toString().toLowerCase())));
+                            sb.append(String.format("%s/bin/imeta add -d %s/%s FileType %s NCGENES%n", irodsHome, ncgenesIRODSDirectory,
+                                    f.getName(), bean.getType()));
+                            sb.append(String.format("%s/bin/imeta add -d %s/%s System %s NCGENES%n", irodsHome, ncgenesIRODSDirectory,
+                                    f.getName(), StringUtils.capitalize(bean.getRunMode().toString().toLowerCase())));
                             commandInput.setCommand(sb.toString());
                             commandInput.setWorkDir(tmpDir);
                             commandInputList.add(commandInput);
 
                             if (StringUtils.isNotEmpty(bean.getDx())) {
                                 commandInput = new CommandInput();
-                                commandInput.setCommand(String.format("%s/bin/imeta add -d %s/%s DxID %s NCGENES",
-                                        irodsHome, ncgenesIRODSDirectory, f.getName(), bean.getDx()));
+                                commandInput.setCommand(String.format("%s/bin/imeta add -d %s/%s DxID %s NCGENES", irodsHome,
+                                        ncgenesIRODSDirectory, f.getName(), bean.getDx()));
                                 commandInput.setWorkDir(tmpDir);
                                 commandInputList.add(commandInput);
                             }
 
                             if (StringUtils.isNotEmpty(bean.getVersion())) {
                                 commandInput = new CommandInput();
-                                commandInput.setCommand(String.format("%s/bin/imeta add -d %s/%s DxVersion %s NCGENES",
-                                        irodsHome, ncgenesIRODSDirectory, f.getName(), bean.getVersion()));
+                                commandInput.setCommand(String.format("%s/bin/imeta add -d %s/%s DxVersion %s NCGENES", irodsHome,
+                                        ncgenesIRODSDirectory, f.getName(), bean.getVersion()));
                                 commandInput.setWorkDir(tmpDir);
                                 commandInputList.add(commandInput);
                             }
@@ -276,12 +268,12 @@ public class RegisterToIRODSMigrationRunnable implements Runnable {
 
     }
 
-    public MaPSeqDAOBean getMaPSeqDAOBean() {
-        return maPSeqDAOBean;
+    public MaPSeqDAOBeanService getMaPSeqDAOBeanService() {
+        return maPSeqDAOBeanService;
     }
 
-    public void setMaPSeqDAOBean(MaPSeqDAOBean maPSeqDAOBean) {
-        this.maPSeqDAOBean = maPSeqDAOBean;
+    public void setMaPSeqDAOBeanService(MaPSeqDAOBeanService maPSeqDAOBeanService) {
+        this.maPSeqDAOBeanService = maPSeqDAOBeanService;
     }
 
     public MaPSeqConfigurationService getMaPSeqConfigurationService() {

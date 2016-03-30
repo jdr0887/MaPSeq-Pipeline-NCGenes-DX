@@ -14,11 +14,11 @@ import org.renci.jlrm.condor.CondorJobEdge;
 import org.renci.jlrm.condor.ext.CondorDOTExporter;
 
 import edu.unc.mapseq.module.core.ZipCLI;
-import edu.unc.mapseq.module.filter.FilterVariantCLI;
-import edu.unc.mapseq.module.gatk.GATKDepthOfCoverageCLI;
-import edu.unc.mapseq.module.picard.PicardSortSAMCLI;
-import edu.unc.mapseq.module.samtools.SAMToolsIndexCLI;
-import edu.unc.mapseq.module.samtools.SAMToolsViewCLI;
+import edu.unc.mapseq.module.sequencing.filter.FilterVariantCLI;
+import edu.unc.mapseq.module.sequencing.gatk.GATKDepthOfCoverageCLI;
+import edu.unc.mapseq.module.sequencing.picard.PicardSortSAMCLI;
+import edu.unc.mapseq.module.sequencing.samtools.SAMToolsIndexCLI;
+import edu.unc.mapseq.module.sequencing.samtools.SAMToolsViewCLI;
 
 public class NCGenesDXWorkflowTest {
 

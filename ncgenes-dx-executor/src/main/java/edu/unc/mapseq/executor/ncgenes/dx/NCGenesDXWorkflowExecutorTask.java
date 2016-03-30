@@ -19,7 +19,7 @@ import edu.unc.mapseq.workflow.ncgenes.dx.NCGenesDXWorkflow;
 
 public class NCGenesDXWorkflowExecutorTask extends TimerTask {
 
-    private final Logger logger = LoggerFactory.getLogger(NCGenesDXWorkflowExecutorTask.class);
+    private static final Logger logger = LoggerFactory.getLogger(NCGenesDXWorkflowExecutorTask.class);
 
     private final WorkflowTPE threadPoolExecutor = new WorkflowTPE();
 
@@ -36,13 +36,11 @@ public class NCGenesDXWorkflowExecutorTask extends TimerTask {
         threadPoolExecutor.setCorePoolSize(workflowBeanService.getCorePoolSize());
         threadPoolExecutor.setMaximumPoolSize(workflowBeanService.getMaxPoolSize());
 
-        logger.info(String.format("ActiveCount: %d, TaskCount: %d, CompletedTaskCount: %d",
-                threadPoolExecutor.getActiveCount(), threadPoolExecutor.getTaskCount(),
-                threadPoolExecutor.getCompletedTaskCount()));
+        logger.info(String.format("ActiveCount: %d, TaskCount: %d, CompletedTaskCount: %d", threadPoolExecutor.getActiveCount(),
+                threadPoolExecutor.getTaskCount(), threadPoolExecutor.getCompletedTaskCount()));
 
-        WorkflowDAO workflowDAO = this.workflowBeanService.getMaPSeqDAOBean().getWorkflowDAO();
-        WorkflowRunAttemptDAO workflowRunAttemptDAO = this.workflowBeanService.getMaPSeqDAOBean()
-                .getWorkflowRunAttemptDAO();
+        WorkflowDAO workflowDAO = this.workflowBeanService.getMaPSeqDAOBeanService().getWorkflowDAO();
+        WorkflowRunAttemptDAO workflowRunAttemptDAO = this.workflowBeanService.getMaPSeqDAOBeanService().getWorkflowRunAttemptDAO();
 
         try {
             List<Workflow> workflowList = workflowDAO.findByName("NCGenesDX");
