@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jgrapht.DirectedGraph;
 import org.jgrapht.Graph;
@@ -47,7 +48,7 @@ import edu.unc.mapseq.workflow.impl.WorkflowJobFactory;
 
 public class NCGenesDXWorkflow extends AbstractSampleWorkflow {
 
-    private final Logger logger = LoggerFactory.getLogger(NCGenesDXWorkflow.class);
+    private static final Logger logger = LoggerFactory.getLogger(NCGenesDXWorkflow.class);
 
     public NCGenesDXWorkflow() {
         super();
@@ -106,7 +107,7 @@ public class NCGenesDXWorkflow extends AbstractSampleWorkflow {
             tmpDirectory.mkdirs();
 
             Set<Attribute> attributeSet = workflowRun.getAttributes();
-            if (attributeSet != null && !attributeSet.isEmpty()) {
+            if (CollectionUtils.isNotEmpty(attributeSet)) {
                 Iterator<Attribute> attributeIter = attributeSet.iterator();
                 while (attributeIter.hasNext()) {
                     Attribute attribute = attributeIter.next();
@@ -144,14 +145,17 @@ public class NCGenesDXWorkflow extends AbstractSampleWorkflow {
 
             File bamFile = SampleWorkflowUtil.findFileByJobAndMimeTypeAndWorkflowId(getWorkflowBeanService().getMaPSeqDAOBeanService(),
                     fileDataSet, GATKTableRecalibration.class, MimeType.APPLICATION_BAM, ncgenesWorkflow.getId());
-            File ncgenesDirectory = new File(sample.getOutputDirectory(), "NCGenes");
+            File ncgenesBaselineDirectory = new File(sample.getOutputDirectory(), "NCGenesBaseline");
 
             if (bamFile == null) {
-                for (File file : ncgenesDirectory.listFiles()) {
-                    if (file.getName().endsWith(".recal.bam")) {
-                        bamFile = file;
-                        break;
+                List<File> files = Arrays.asList(ncgenesBaselineDirectory.listFiles((a, b) -> {
+                    if (b.endsWith(".recal.bam")) {
+                        return true;
                     }
+                    return false;
+                }));
+                if (CollectionUtils.isNotEmpty(files)) {
+                    bamFile = files.get(0);
                 }
             }
 
@@ -164,7 +168,7 @@ public class NCGenesDXWorkflow extends AbstractSampleWorkflow {
                     fileDataSet, SAMToolsIndex.class, MimeType.APPLICATION_BAM_INDEX, ncgenesWorkflow.getId());
 
             if (bamIndexFile == null) {
-                for (File file : ncgenesDirectory.listFiles()) {
+                for (File file : ncgenesBaselineDirectory.listFiles()) {
                     if (bamFile != null && bamFile.getName().replace(".bam", ".bai").equals(file.getName())) {
                         bamIndexFile = file;
                         break;
@@ -250,8 +254,8 @@ public class NCGenesDXWorkflow extends AbstractSampleWorkflow {
                         ncgenesWorkflow.getId());
 
                 if (gatkApplyRecalibrationOut == null) {
-                    List<File> files = Arrays.asList(ncgenesDirectory.listFiles());
-                    if (files != null && !files.isEmpty()) {
+                    List<File> files = Arrays.asList(ncgenesBaselineDirectory.listFiles());
+                    if (CollectionUtils.isNotEmpty(files)) {
                         for (File f : files) {
                             if (f.getName().endsWith(".recalibrated.filtered.vcf")) {
                                 gatkApplyRecalibrationOut = f;
@@ -307,7 +311,7 @@ public class NCGenesDXWorkflow extends AbstractSampleWorkflow {
             }
 
             Set<Attribute> attributeSet = workflowRun.getAttributes();
-            if (attributeSet != null && !attributeSet.isEmpty()) {
+            if (CollectionUtils.isNotEmpty(attributeSet)) {
                 Iterator<Attribute> attributeIter = attributeSet.iterator();
                 while (attributeIter.hasNext()) {
                     Attribute attribute = attributeIter.next();
