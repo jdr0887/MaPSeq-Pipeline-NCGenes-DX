@@ -84,6 +84,7 @@
             <Private-Package />
             <Export-Package>edu.unc.mapseq.commands.ncgenes.dx*</Export-Package>
             <Import-Package>*</Import-Package>
+	    <Karaf-Commands>edu.unc.mapseq.commands.ncgenes.dx</Karaf-Commands>	    
           </instructions>
         </configuration>
       </plugin>
