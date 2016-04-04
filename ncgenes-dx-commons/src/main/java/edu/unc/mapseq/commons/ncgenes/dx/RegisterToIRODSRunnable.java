@@ -20,8 +20,8 @@ import edu.unc.mapseq.dao.MaPSeqDAOBeanService;
 import edu.unc.mapseq.dao.MaPSeqDAOException;
 import edu.unc.mapseq.dao.model.Flowcell;
 import edu.unc.mapseq.dao.model.Sample;
-import edu.unc.mapseq.workflow.impl.IRODSBean;
-import edu.unc.mapseq.workflow.impl.SampleWorkflowUtil;
+import edu.unc.mapseq.workflow.sequencing.IRODSBean;
+import edu.unc.mapseq.workflow.sequencing.SequencingWorkflowUtil;
 
 public class RegisterToIRODSRunnable implements Runnable {
 
@@ -65,7 +65,7 @@ public class RegisterToIRODSRunnable implements Runnable {
 
         File ncgenesDXOutputDirectory = new File(sample.getOutputDirectory(), "NCGenesDX");
 
-        List<File> readPairList = SampleWorkflowUtil.getReadPairList(sample);
+        List<File> readPairList = SequencingWorkflowUtil.getReadPairList(sample);
 
         // assumption: a dash is used as a delimiter between a participantId and
         // the external code
@@ -77,7 +77,7 @@ public class RegisterToIRODSRunnable implements Runnable {
         // WorkflowUtil.getRootFastqName(r1FastqFile.getName());
 
         File r2FastqFile = readPairList.get(1);
-        String r2FastqRootName = SampleWorkflowUtil.getRootFastqName(r2FastqFile.getName());
+        String r2FastqRootName = SequencingWorkflowUtil.getRootFastqName(r2FastqFile.getName());
 
         String fastqLaneRootName = StringUtils.removeEnd(r2FastqRootName, "_R2");
 
