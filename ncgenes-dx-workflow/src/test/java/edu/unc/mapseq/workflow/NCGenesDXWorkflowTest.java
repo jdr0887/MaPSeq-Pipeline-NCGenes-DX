@@ -25,47 +25,45 @@ public class NCGenesDXWorkflowTest {
     @Test
     public void createDot() {
 
-        DirectedGraph<CondorJob, CondorJobEdge> graph = new DefaultDirectedGraph<CondorJob, CondorJobEdge>(
-                CondorJobEdge.class);
+        DirectedGraph<CondorJob, CondorJobEdge> graph = new DefaultDirectedGraph<CondorJob, CondorJobEdge>(CondorJobEdge.class);
 
         int count = 0;
 
         // new job
-        CondorJob gatkGeneDepthOfCoverageJob = new CondorJobBuilder().name(
-                String.format("%s_%d", GATKDepthOfCoverageCLI.class.getSimpleName(), ++count)).build();
+        CondorJob gatkGeneDepthOfCoverageJob = new CondorJobBuilder()
+                .name(String.format("%s_%d", GATKDepthOfCoverageCLI.class.getSimpleName(), ++count)).build();
         graph.addVertex(gatkGeneDepthOfCoverageJob);
 
         // new job
-        CondorJob samtoolsViewJob = new CondorJobBuilder().name(
-                String.format("%s_%d", SAMToolsViewCLI.class.getSimpleName(), ++count)).build();
+        CondorJob samtoolsViewJob = new CondorJobBuilder().name(String.format("%s_%d", SAMToolsViewCLI.class.getSimpleName(), ++count))
+                .build();
         graph.addVertex(samtoolsViewJob);
 
         // new job
-        CondorJob picardSortSAMJob = new CondorJobBuilder().name(
-                String.format("%s_%d", PicardSortSAMCLI.class.getSimpleName(), ++count)).build();
+        CondorJob picardSortSAMJob = new CondorJobBuilder().name(String.format("%s_%d", PicardSortSAMCLI.class.getSimpleName(), ++count))
+                .build();
         graph.addVertex(picardSortSAMJob);
         graph.addEdge(samtoolsViewJob, picardSortSAMJob);
 
         // new job
-        CondorJob picardSortSAMIndexJob = new CondorJobBuilder().name(
-                String.format("%s_%d", SAMToolsIndexCLI.class.getSimpleName(), ++count)).build();
+        CondorJob picardSortSAMIndexJob = new CondorJobBuilder()
+                .name(String.format("%s_%d", SAMToolsIndexCLI.class.getSimpleName(), ++count)).build();
         graph.addVertex(picardSortSAMIndexJob);
         graph.addEdge(picardSortSAMJob, picardSortSAMIndexJob);
 
         // new job
-        CondorJob zipJob = new CondorJobBuilder().name(String.format("%s_%d", ZipCLI.class.getSimpleName(), ++count))
-                .build();
+        CondorJob zipJob = new CondorJobBuilder().name(String.format("%s_%d", ZipCLI.class.getSimpleName(), ++count)).build();
         graph.addVertex(zipJob);
         graph.addEdge(picardSortSAMIndexJob, zipJob);
 
         // new job
-        CondorJob filterVariant2Job = new CondorJobBuilder().name(
-                String.format("%s_%d", FilterVariantCLI.class.getSimpleName(), ++count)).build();
+        CondorJob filterVariant2Job = new CondorJobBuilder().name(String.format("%s_%d", FilterVariantCLI.class.getSimpleName(), ++count))
+                .build();
         graph.addVertex(filterVariant2Job);
 
         // new job
-        CondorJob filterVariant3Job = new CondorJobBuilder().name(
-                String.format("%s_%d", FilterVariantCLI.class.getSimpleName(), ++count)).build();
+        CondorJob filterVariant3Job = new CondorJobBuilder().name(String.format("%s_%d", FilterVariantCLI.class.getSimpleName(), ++count))
+                .build();
         graph.addVertex(filterVariant3Job);
 
         VertexNameProvider<CondorJob> vnpId = new VertexNameProvider<CondorJob>() {
@@ -82,8 +80,8 @@ public class NCGenesDXWorkflowTest {
             }
         };
 
-        CondorDOTExporter<CondorJob, CondorJobEdge> dotExporter = new CondorDOTExporter<CondorJob, CondorJobEdge>(
-                vnpId, vnpLabel, null, null, null, null);
+        CondorDOTExporter<CondorJob, CondorJobEdge> dotExporter = new CondorDOTExporter<CondorJob, CondorJobEdge>(vnpId, vnpLabel, null,
+                null, null, null);
         File srcSiteResourcesImagesDir = new File("../src/site/resources/images");
         if (!srcSiteResourcesImagesDir.exists()) {
             srcSiteResourcesImagesDir.mkdirs();
