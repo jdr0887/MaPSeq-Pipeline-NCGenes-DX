@@ -2,13 +2,13 @@
   <parent>
     <groupId>edu.unc.mapseq.pipelines</groupId>
     <artifactId>ncgenes-dx</artifactId>
-    <version>0.6.3</version>
+    <version>0.6.4-SNAPSHOT</version>
   </parent>
   <name>MaPSeq :: Pipelines :: NCGenes DX :: Commons</name>
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.unc.mapseq.pipelines.ncgenes-dx</groupId>
   <artifactId>ncgenes-dx-commons</artifactId>
-  <version>0.6.3</version>
+  <version>0.6.4-SNAPSHOT</version>
   <packaging>bundle</packaging>
   <dependencies>
     <dependency>
