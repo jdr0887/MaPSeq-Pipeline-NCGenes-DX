@@ -56,8 +56,8 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>edu.unc.mapseq.distribution</groupId>
-      <artifactId>mapseq-workflow-impl</artifactId>
+      <groupId>edu.unc.mapseq.distribution.mapseq-workflows</groupId>
+      <artifactId>mapseq-workflow-sequencing</artifactId>
       <scope>provided</scope>
     </dependency>
   </dependencies>
