@@ -6,9 +6,8 @@
     <cm:default-properties>
       <cm:property name="corePoolSize" value="100" />
       <cm:property name="maxPoolSize" value="100" />
-      <cm:property name="siteName" value="Kure" />
-      <cm:property name="reference-sequence"
-        value="$NCGENESDX_REFERENCES_DIRECTORY/BUILD.37.1/bwa061sam0118/BUILD.37.1.sorted.shortid.fa" />
+      <cm:property name="siteName" value="Hatteras" />
+      <cm:property name="referenceSequence" value="$NCGENESDX_REFERENCES_DIRECTORY/BUILD.37.1/bwa061sam0118/BUILD.37.1.sorted.shortid.fa" />
       <cm:property name="icSNPIntervalList" value="$NCGENESDX_RESOURCES_DIRECTORY/ic_snp_v2.list" />
     </cm:default-properties>
   </cm:property-placeholder>
@@ -43,7 +42,7 @@
     <property name="maPSeqDAOBean" ref="maPSeqDAOBean" />
     <property name="attributes">
       <map>
-        <entry key="referenceSequence" value="${reference-sequence}" />
+        <entry key="referenceSequence" value="${referenceSequence}" />
         <entry key="icSNPIntervalList" value="${icSNPIntervalList}" />
         <entry key="siteName" value="${siteName}" />
       </map>
