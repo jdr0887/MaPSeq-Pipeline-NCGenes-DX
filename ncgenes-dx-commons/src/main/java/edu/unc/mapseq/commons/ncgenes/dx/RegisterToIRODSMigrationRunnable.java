@@ -23,8 +23,8 @@ import edu.unc.mapseq.dao.SampleDAO;
 import edu.unc.mapseq.dao.StudyDAO;
 import edu.unc.mapseq.dao.model.Sample;
 import edu.unc.mapseq.dao.model.Study;
-import edu.unc.mapseq.workflow.impl.IRODSBean;
-import edu.unc.mapseq.workflow.impl.SampleWorkflowUtil;
+import edu.unc.mapseq.workflow.sequencing.IRODSBean;
+import edu.unc.mapseq.workflow.sequencing.SequencingWorkflowUtil;
 
 public class RegisterToIRODSMigrationRunnable implements Runnable {
 
@@ -65,16 +65,16 @@ public class RegisterToIRODSMigrationRunnable implements Runnable {
                         tmpDir.mkdirs();
                     }
 
-                    List<File> readPairList = SampleWorkflowUtil.getReadPairList(sample);
+                    List<File> readPairList = SequencingWorkflowUtil.getReadPairList(sample);
 
                     int idx = sample.getName().lastIndexOf("-");
                     String participantId = idx != -1 ? sample.getName().substring(0, idx) : sample.getName();
 
                     File r1FastqFile = readPairList.get(0);
-                    String r1FastqRootName = SampleWorkflowUtil.getRootFastqName(r1FastqFile.getName());
+                    String r1FastqRootName = SequencingWorkflowUtil.getRootFastqName(r1FastqFile.getName());
 
                     File r2FastqFile = readPairList.get(1);
-                    String r2FastqRootName = SampleWorkflowUtil.getRootFastqName(r2FastqFile.getName());
+                    String r2FastqRootName = SequencingWorkflowUtil.getRootFastqName(r2FastqFile.getName());
 
                     String fastqLaneRootName = StringUtils.removeEnd(r2FastqRootName, "_R2");
 
