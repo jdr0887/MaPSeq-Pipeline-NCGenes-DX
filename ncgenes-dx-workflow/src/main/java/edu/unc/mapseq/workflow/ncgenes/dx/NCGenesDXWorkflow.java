@@ -42,11 +42,12 @@ import edu.unc.mapseq.module.sequencing.samtools.SAMToolsIndex;
 import edu.unc.mapseq.module.sequencing.samtools.SAMToolsIndexCLI;
 import edu.unc.mapseq.module.sequencing.samtools.SAMToolsViewCLI;
 import edu.unc.mapseq.workflow.WorkflowException;
-import edu.unc.mapseq.workflow.impl.AbstractSampleWorkflow;
-import edu.unc.mapseq.workflow.impl.SampleWorkflowUtil;
-import edu.unc.mapseq.workflow.impl.WorkflowJobFactory;
+import edu.unc.mapseq.workflow.core.WorkflowJobFactory;
+import edu.unc.mapseq.workflow.core.WorkflowUtil;
+import edu.unc.mapseq.workflow.sequencing.AbstractSequencingWorkflow;
+import edu.unc.mapseq.workflow.sequencing.SequencingWorkflowJobFactory;
 
-public class NCGenesDXWorkflow extends AbstractSampleWorkflow {
+public class NCGenesDXWorkflow extends AbstractSequencingWorkflow {
 
     private static final Logger logger = LoggerFactory.getLogger(NCGenesDXWorkflow.class);
 
@@ -143,7 +144,7 @@ public class NCGenesDXWorkflow extends AbstractSampleWorkflow {
 
             Set<FileData> fileDataSet = sample.getFileDatas();
 
-            File bamFile = SampleWorkflowUtil.findFileByJobAndMimeTypeAndWorkflowId(getWorkflowBeanService().getMaPSeqDAOBeanService(),
+            File bamFile = WorkflowUtil.findFileByJobAndMimeTypeAndWorkflowId(getWorkflowBeanService().getMaPSeqDAOBeanService(),
                     fileDataSet, GATKTableRecalibration.class, MimeType.APPLICATION_BAM, ncgenesWorkflow.getId());
             File ncgenesBaselineDirectory = new File(sample.getOutputDirectory(), "NCGenesBaseline");
 
@@ -164,7 +165,7 @@ public class NCGenesDXWorkflow extends AbstractSampleWorkflow {
                 throw new WorkflowException("bam file to process was not found");
             }
 
-            File bamIndexFile = SampleWorkflowUtil.findFileByJobAndMimeTypeAndWorkflowId(getWorkflowBeanService().getMaPSeqDAOBeanService(),
+            File bamIndexFile = WorkflowUtil.findFileByJobAndMimeTypeAndWorkflowId(getWorkflowBeanService().getMaPSeqDAOBeanService(),
                     fileDataSet, SAMToolsIndex.class, MimeType.APPLICATION_BAM_INDEX, ncgenesWorkflow.getId());
 
             if (bamIndexFile == null) {
@@ -184,7 +185,7 @@ public class NCGenesDXWorkflow extends AbstractSampleWorkflow {
             try {
 
                 // new job
-                CondorJobBuilder builder = WorkflowJobFactory
+                CondorJobBuilder builder = SequencingWorkflowJobFactory
                         .createJob(++count, GATKDepthOfCoverageCLI.class, attempt.getId(), sample.getId()).siteName(siteName);
                 String outputPrefix = bamFile.getName().replace(".bam", String.format(".coverage.v%s.gene", version));
                 builder.addArgument(GATKDepthOfCoverageCLI.PHONEHOME, GATKPhoneHomeType.NO_ET.toString())
@@ -207,7 +208,8 @@ public class NCGenesDXWorkflow extends AbstractSampleWorkflow {
                 graph.addVertex(gatkGeneDepthOfCoverageJob);
 
                 // new job
-                builder = WorkflowJobFactory.createJob(++count, SAMToolsViewCLI.class, attempt.getId(), sample.getId()).siteName(siteName);
+                builder = SequencingWorkflowJobFactory.createJob(++count, SAMToolsViewCLI.class, attempt.getId(), sample.getId())
+                        .siteName(siteName);
                 File samtoolsViewOutput = new File(outputDirectory,
                         bamFile.getName().replace(".bam", String.format(".filtered_by_dxid_%s_v%s.bam", dx, version)));
                 builder.addArgument(SAMToolsViewCLI.BAMFORMAT).addArgument(SAMToolsViewCLI.OUTPUT, samtoolsViewOutput.getAbsolutePath())
@@ -218,7 +220,8 @@ public class NCGenesDXWorkflow extends AbstractSampleWorkflow {
                 graph.addVertex(samtoolsViewJob);
 
                 // new job
-                builder = WorkflowJobFactory.createJob(++count, PicardSortSAMCLI.class, attempt.getId(), sample.getId()).siteName(siteName);
+                builder = SequencingWorkflowJobFactory.createJob(++count, PicardSortSAMCLI.class, attempt.getId(), sample.getId())
+                        .siteName(siteName);
                 File picardSortOutput = new File(outputDirectory, samtoolsViewOutput.getName().replace(".bam", ".sorted.bam"));
                 builder.addArgument(PicardSortSAMCLI.INPUT, samtoolsViewOutput.getAbsolutePath())
                         .addArgument(PicardSortSAMCLI.OUTPUT, picardSortOutput.getAbsolutePath())
@@ -229,7 +232,8 @@ public class NCGenesDXWorkflow extends AbstractSampleWorkflow {
                 graph.addEdge(samtoolsViewJob, picardSortSAMJob);
 
                 // new job
-                builder = WorkflowJobFactory.createJob(++count, SAMToolsIndexCLI.class, attempt.getId(), sample.getId()).siteName(siteName);
+                builder = SequencingWorkflowJobFactory.createJob(++count, SAMToolsIndexCLI.class, attempt.getId(), sample.getId())
+                        .siteName(siteName);
                 File picardSortSAMIndexOut = new File(outputDirectory, picardSortOutput.getName().replace(".bam", ".bai"));
                 builder.addArgument(SAMToolsIndexCLI.INPUT, picardSortOutput.getAbsolutePath()).addArgument(SAMToolsIndexCLI.OUTPUT,
                         picardSortSAMIndexOut.getAbsolutePath());
@@ -239,7 +243,7 @@ public class NCGenesDXWorkflow extends AbstractSampleWorkflow {
                 graph.addEdge(picardSortSAMJob, picardSortSAMIndexJob);
 
                 // new job
-                builder = WorkflowJobFactory.createJob(++count, ZipCLI.class, attempt.getId(), sample.getId()).siteName(siteName);
+                builder = SequencingWorkflowJobFactory.createJob(++count, ZipCLI.class, attempt.getId(), sample.getId()).siteName(siteName);
                 File zipOutputFile = new File(outputDirectory, picardSortOutput.getName().replace(".bam", ".zip"));
                 builder.addArgument(ZipCLI.ENTRY, picardSortOutput.getAbsolutePath())
                         .addArgument(ZipCLI.ENTRY, picardSortSAMIndexOut.getAbsolutePath())
@@ -249,7 +253,7 @@ public class NCGenesDXWorkflow extends AbstractSampleWorkflow {
                 graph.addVertex(zipJob);
                 graph.addEdge(picardSortSAMIndexJob, zipJob);
 
-                File gatkApplyRecalibrationOut = SampleWorkflowUtil.findFileByJobAndMimeTypeAndWorkflowId(
+                File gatkApplyRecalibrationOut = WorkflowUtil.findFileByJobAndMimeTypeAndWorkflowId(
                         getWorkflowBeanService().getMaPSeqDAOBeanService(), fileDataSet, GATKApplyRecalibration.class, MimeType.TEXT_VCF,
                         ncgenesWorkflow.getId());
 
@@ -271,7 +275,8 @@ public class NCGenesDXWorkflow extends AbstractSampleWorkflow {
                 }
 
                 // new job
-                builder = WorkflowJobFactory.createJob(++count, FilterVariantCLI.class, attempt.getId(), sample.getId()).siteName(siteName);
+                builder = SequencingWorkflowJobFactory.createJob(++count, FilterVariantCLI.class, attempt.getId(), sample.getId())
+                        .siteName(siteName);
                 File filterVariantOutput = new File(outputDirectory,
                         bamFile.getName().replace(".bam", String.format(".filtered_by_dxid_%s_v%s.vcf", dx, version)));
                 builder.addArgument(FilterVariantCLI.INTERVALLIST, intervalListByDXAndVersionFile.getAbsolutePath())
