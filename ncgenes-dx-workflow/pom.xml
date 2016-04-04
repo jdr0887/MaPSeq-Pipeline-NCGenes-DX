@@ -16,15 +16,15 @@
       <artifactId>mapseq-workflow-api</artifactId>
     </dependency>
     <dependency>
-      <groupId>edu.unc.mapseq.distribution</groupId>
-      <artifactId>mapseq-workflow-impl</artifactId>
+      <groupId>edu.unc.mapseq.distribution.mapseq-workflows</groupId>
+      <artifactId>mapseq-workflow-sequencing</artifactId>
     </dependency>
     <dependency>
-      <groupId>edu.unc.mapseq.distribution.modules</groupId>
+      <groupId>edu.unc.mapseq.distribution.mapseq-modules</groupId>
       <artifactId>mapseq-module-core</artifactId>
     </dependency>
     <dependency>
-      <groupId>edu.unc.mapseq.distribution.modules</groupId>
+      <groupId>edu.unc.mapseq.distribution.mapseq-modules</groupId>
       <artifactId>mapseq-module-sequencing</artifactId>
     </dependency>    
     <dependency>
