@@ -99,8 +99,8 @@ public class RegisterToIRODSMigrationRunnable implements Runnable {
                                 break;
                             case PROD:
                             default:
-                                ncgenesIRODSDirectory = String.format("/MedGenZone/home/medgenuser/sequence_data/ncgenes/%s/%s", participantId,
-                                        version);
+                                ncgenesIRODSDirectory = String.format("/MedGenZone/home/medgenuser/sequence_data/ncgenes/%s/%s",
+                                        participantId, version);
                                 break;
                         }
 
