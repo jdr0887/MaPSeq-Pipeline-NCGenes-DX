@@ -43,9 +43,9 @@ public class RunWorkflowAction implements Action {
 
     @Override
     public Object execute() {
-        
-        ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(String.format("nio://%s:61616",
-                maPSeqConfigurationService.getWebServiceHost("localhost")));
+
+        ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(
+                String.format("nio://%s:61616", maPSeqConfigurationService.getWebServiceHost("localhost")));
 
         Connection connection = null;
         Session session = null;
