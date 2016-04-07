@@ -13,33 +13,13 @@
   </cm:property-placeholder>
 
   <reference id="maPSeqConfigurationService" interface="edu.unc.mapseq.config.MaPSeqConfigurationService" />
-  <reference id="attributeDAO" interface="edu.unc.mapseq.dao.AttributeDAO" />
-  <reference id="fileDataDAO" interface="edu.unc.mapseq.dao.FileDataDAO" />
-  <reference id="sampleDAO" interface="edu.unc.mapseq.dao.SampleDAO" />
-  <reference id="jobDAO" interface="edu.unc.mapseq.dao.JobDAO" />
-  <reference id="studyDAO" interface="edu.unc.mapseq.dao.StudyDAO" />
-  <reference id="flowcellDAO" interface="edu.unc.mapseq.dao.FlowcellDAO" />
-  <reference id="workflowDAO" interface="edu.unc.mapseq.dao.WorkflowDAO" />
-  <reference id="workflowRunDAO" interface="edu.unc.mapseq.dao.WorkflowRunDAO" />
-  <reference id="workflowRunAttemptDAO" interface="edu.unc.mapseq.dao.WorkflowRunAttemptDAO" />
-
-  <bean id="maPSeqDAOBean" class="edu.unc.mapseq.dao.MaPSeqDAOBean">
-    <property name="attributeDAO" ref="attributeDAO" />
-    <property name="fileDataDAO" ref="fileDataDAO" />
-    <property name="sampleDAO" ref="sampleDAO" />
-    <property name="jobDAO" ref="jobDAO" />
-    <property name="studyDAO" ref="studyDAO" />
-    <property name="flowcellDAO" ref="flowcellDAO" />
-    <property name="workflowDAO" ref="workflowDAO" />
-    <property name="workflowRunDAO" ref="workflowRunDAO" />
-    <property name="workflowRunAttemptDAO" ref="workflowRunAttemptDAO" />
-  </bean>
+  <reference id="maPSeqDAOBeanService" interface="edu.unc.mapseq.dao.MaPSeqDAOBeanService" />
 
   <bean id="NCGenesDXWorkflowBeanService" class="edu.unc.mapseq.workflow.impl.WorkflowBeanServiceImpl">
     <property name="corePoolSize" value="${corePoolSize}" />
     <property name="maxPoolSize" value="${maxPoolSize}" />
     <property name="maPSeqConfigurationService" ref="maPSeqConfigurationService" />
-    <property name="maPSeqDAOBean" ref="maPSeqDAOBean" />
+    <property name="maPSeqDAOBeanService" ref="maPSeqDAOBeanService" />
     <property name="attributes">
       <map>
         <entry key="referenceSequence" value="${referenceSequence}" />
