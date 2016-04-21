@@ -55,8 +55,6 @@ public class RegisterToIRODSRunnable implements Runnable {
             return;
         }
 
-        Flowcell flowcell = sample.getFlowcell();
-
         File ncgenesOutputDirectory = new File(sample.getOutputDirectory(), "NCGenesBaseline");
         File tmpDir = new File(sample.getOutputDirectory(), "tmp");
         if (!tmpDir.exists()) {
@@ -81,23 +79,17 @@ public class RegisterToIRODSRunnable implements Runnable {
 
         String fastqLaneRootName = StringUtils.removeEnd(r2FastqRootName, "_R2");
 
-        String irodsHome = System.getenv("NCGENES_IRODS_HOME");
-        if (StringUtils.isEmpty(irodsHome)) {
-            logger.error("irodsHome is not set");
-            return;
-        }
-
         String ncgenesIRODSDirectory;
 
         switch (runMode) {
             case DEV:
             case STAGING:
-                ncgenesIRODSDirectory = String.format("/MedGenZone/home/medgenuser/sequence_data/%s/ncgenes/%s/%s",
-                        runMode.toString().toLowerCase(), participantId, version);
+                ncgenesIRODSDirectory = String.format("/MedGenZone/sequence_data/%s/ncgenes/%s/%s", runMode.toString().toLowerCase(),
+                        participantId, version);
                 break;
             case PROD:
             default:
-                ncgenesIRODSDirectory = String.format("/MedGenZone/home/medgenuser/sequence_data/ncgenes/%s/%s", participantId, version);
+                ncgenesIRODSDirectory = String.format("/MedGenZone/sequence_data/ncgenes/%s/%s", participantId, version);
                 break;
         }
 
@@ -108,9 +100,9 @@ public class RegisterToIRODSRunnable implements Runnable {
         CommandInput commandInput = new CommandInput();
         commandInput.setExitImmediately(Boolean.FALSE);
         StringBuilder sb = new StringBuilder();
-        sb.append(String.format("%s/bin/imkdir -p %s%n", irodsHome, ncgenesIRODSDirectory));
-        sb.append(String.format("%s/bin/imeta add -C %s Project NCGENES%n", irodsHome, ncgenesIRODSDirectory));
-        sb.append(String.format("%s/bin/imeta add -C %s ParticipantID %s NCGENES%n", irodsHome, ncgenesIRODSDirectory, participantId));
+        sb.append(String.format("$NCGENESDX_IRODS_HOME/imkdir -p %s%n", ncgenesIRODSDirectory));
+        sb.append(String.format("$NCGENESDX_IRODS_HOME/imeta add -C %s Project NCGENES%n", ncgenesIRODSDirectory));
+        sb.append(String.format("$NCGENESDX_IRODS_HOME/imeta add -C %s ParticipantID %s NCGENES%n", ncgenesIRODSDirectory, participantId));
         commandInput.setCommand(sb.toString());
         commandInput.setWorkDir(tmpDir);
         commandInputList.add(commandInput);
@@ -182,9 +174,9 @@ public class RegisterToIRODSRunnable implements Runnable {
             commandInput.setExitImmediately(Boolean.FALSE);
 
             StringBuilder registerCommandSB = new StringBuilder();
-            String registrationCommand = String.format("%s/bin/ireg -f %s %s/%s", irodsHome, f.getAbsolutePath(), ncgenesIRODSDirectory,
+            String registrationCommand = String.format("$NCGENESDX_IRODS_HOME/ireg -f %s %s/%s", f.getAbsolutePath(), ncgenesIRODSDirectory,
                     f.getName());
-            String deRegistrationCommand = String.format("%s/bin/irm -U %s/%s", irodsHome, ncgenesIRODSDirectory, f.getName());
+            String deRegistrationCommand = String.format("$NCGENESDX_IRODS_HOME/irm -U %s/%s", ncgenesIRODSDirectory, f.getName());
             registerCommandSB.append(registrationCommand).append("\n");
             registerCommandSB.append(String.format("if [ $? != 0 ]; then %s; %s; fi%n", deRegistrationCommand, registrationCommand));
             commandInput.setCommand(registerCommandSB.toString());
@@ -194,11 +186,11 @@ public class RegisterToIRODSRunnable implements Runnable {
             commandInput = new CommandInput();
             commandInput.setExitImmediately(Boolean.FALSE);
             sb = new StringBuilder();
-            sb.append(String.format("%s/bin/imeta add -d %s/%s ParticipantID %s NCGENES%n", irodsHome, ncgenesIRODSDirectory, f.getName(),
-                    participantId));
-            sb.append(String.format("%s/bin/imeta add -d %s/%s FileType %s NCGENES%n", irodsHome, ncgenesIRODSDirectory, f.getName(),
+            sb.append(String.format("$NCGENESDX_IRODS_HOME/imeta add -d %s/%s ParticipantID %s NCGENES%n", ncgenesIRODSDirectory,
+                    f.getName(), participantId));
+            sb.append(String.format("$NCGENESDX_IRODS_HOME/imeta add -d %s/%s FileType %s NCGENES%n", ncgenesIRODSDirectory, f.getName(),
                     bean.getType()));
-            sb.append(String.format("%s/bin/imeta add -d %s/%s System %s NCGENES%n", irodsHome, ncgenesIRODSDirectory, f.getName(),
+            sb.append(String.format("$NCGENESDX_IRODS_HOME/imeta add -d %s/%s System %s NCGENES%n", ncgenesIRODSDirectory, f.getName(),
                     StringUtils.capitalize(bean.getRunMode().toString().toLowerCase())));
             commandInput.setCommand(sb.toString());
             commandInput.setWorkDir(tmpDir);
@@ -206,7 +198,7 @@ public class RegisterToIRODSRunnable implements Runnable {
 
             if (StringUtils.isNotEmpty(bean.getDx())) {
                 commandInput = new CommandInput();
-                commandInput.setCommand(String.format("%s/bin/imeta add -d %s/%s DxID %s NCGENES", irodsHome, ncgenesIRODSDirectory,
+                commandInput.setCommand(String.format("$NCGENESDX_IRODS_HOME/imeta add -d %s/%s DxID %s NCGENES", ncgenesIRODSDirectory,
                         f.getName(), bean.getDx()));
                 commandInput.setWorkDir(tmpDir);
                 commandInputList.add(commandInput);
@@ -214,8 +206,8 @@ public class RegisterToIRODSRunnable implements Runnable {
 
             if (StringUtils.isNotEmpty(bean.getVersion())) {
                 commandInput = new CommandInput();
-                commandInput.setCommand(String.format("%s/bin/imeta add -d %s/%s DxVersion %s NCGENES", irodsHome, ncgenesIRODSDirectory,
-                        f.getName(), bean.getVersion()));
+                commandInput.setCommand(String.format("$NCGENESDX_IRODS_HOME/imeta add -d %s/%s DxVersion %s NCGENES",
+                        ncgenesIRODSDirectory, f.getName(), bean.getVersion()));
                 commandInput.setWorkDir(tmpDir);
                 commandInputList.add(commandInput);
             }
