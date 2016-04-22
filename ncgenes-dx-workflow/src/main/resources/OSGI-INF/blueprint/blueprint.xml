@@ -8,7 +8,7 @@
       <cm:property name="maxPoolSize" value="100" />
       <cm:property name="siteName" value="Hatteras" />
       <cm:property name="referenceSequence" value="$NCGENESDX_REFERENCES_DIRECTORY/BUILD.37.1/bwa061sam0118/BUILD.37.1.sorted.shortid.fa" />
-      <cm:property name="icSNPIntervalList" value="$NCGENESDX_RESOURCES_DIRECTORY/ic_snp_v2.list" />
+      <cm:property name="icSNPIntervalList" value="$NCGENESDX_RESOURCES_DIRECTORY/ncgenes/ic_snp_v2.list" />
     </cm:default-properties>
   </cm:property-placeholder>
 
