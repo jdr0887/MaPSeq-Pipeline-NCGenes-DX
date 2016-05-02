@@ -6,6 +6,7 @@ import org.apache.karaf.shell.api.action.Action;
 import org.apache.karaf.shell.api.action.Argument;
 import org.apache.karaf.shell.api.action.Command;
 import org.apache.karaf.shell.api.action.lifecycle.Reference;
+import org.apache.karaf.shell.api.action.lifecycle.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,6 +15,7 @@ import edu.unc.mapseq.config.MaPSeqConfigurationService;
 import edu.unc.mapseq.dao.MaPSeqDAOBeanService;
 
 @Command(scope = "ncgenes-dx", name = "register-to-irods-migration", description = "re-register an entire flowcell")
+@Service
 public class RegisterToIRODSMigrationAction implements Action {
 
     private final Logger logger = LoggerFactory.getLogger(RegisterToIRODSMigrationAction.class);
