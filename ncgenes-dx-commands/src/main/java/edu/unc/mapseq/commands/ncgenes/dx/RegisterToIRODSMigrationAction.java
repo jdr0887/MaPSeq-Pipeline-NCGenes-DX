@@ -18,7 +18,7 @@ import edu.unc.mapseq.dao.MaPSeqDAOBeanService;
 @Service
 public class RegisterToIRODSMigrationAction implements Action {
 
-    private final Logger logger = LoggerFactory.getLogger(RegisterToIRODSMigrationAction.class);
+    private static final Logger logger = LoggerFactory.getLogger(RegisterToIRODSMigrationAction.class);
 
     @Reference
     private MaPSeqDAOBeanService maPSeqDAOBeanService;
