@@ -126,17 +126,22 @@ public class NCGenesDXWorkflow extends AbstractSequencingWorkflow {
                 throw new WorkflowException("Both version and DX were null...returning empty dag");
             }
 
-            String format = "$MAPSEQ_DATA_DIRECTORY/resources/annotation/abeast/NCGenes/%1$s/exons_pm_0_v%1$s.interval_list";
-            File intervalListByVersionFile = new File(String.format(format, version));
+            String dataDirectory = System.getenv("MAPSEQ_DATA_DIRECTORY");
+            if (StringUtils.isEmpty(dataDirectory)) {
+                dataDirectory = "/projects/mapseq/data";
+            }
+
+            String format = "%1$s/resources/annotation/abeast/NCGenes/%2$s/exons_pm_0_v%2$s.interval_list";
+            File intervalListByVersionFile = new File(String.format(format, dataDirectory, version));
             if (!intervalListByVersionFile.exists()) {
                 throw new WorkflowException("Interval list file does not exist: " + intervalListByVersionFile.getAbsolutePath());
             }
 
-            format = "$MAPSEQ_DATA_DIRECTORY/resources/annotation/abeast/NCGenes/%1$s/genes_dxid_%2$s_v_%1$s.interval_list";
+            format = "%1$s/resources/annotation/abeast/NCGenes/%2$s/genes_dxid_%3$s_v_%2$s.interval_list";
             if (isIncidental) {
-                format = "$MAPSEQ_DATA_DIRECTORY/resources/annotation/abeast/NCGenes/Incidental/incidental_%2$s_%1$s.interval_list";
+                format = "%1$s/resources/annotation/abeast/NCGenes/Incidental/incidental_%3$s_%2$s.interval_list";
             }
-            File intervalListByDXAndVersionFile = new File(String.format(format, version, dx));
+            File intervalListByDXAndVersionFile = new File(String.format(format, dataDirectory, version, dx));
             if (!intervalListByDXAndVersionFile.exists()) {
                 throw new WorkflowException("Interval list file does not exist: " + intervalListByDXAndVersionFile.getAbsolutePath());
             }
