@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.TimerTask;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,6 +26,8 @@ public class NCGenesDXWorkflowExecutorTask extends TimerTask {
 
     private WorkflowBeanService workflowBeanService;
 
+    private String workflowName;
+
     public NCGenesDXWorkflowExecutorTask() {
         super();
     }
@@ -43,14 +46,21 @@ public class NCGenesDXWorkflowExecutorTask extends TimerTask {
         WorkflowRunAttemptDAO workflowRunAttemptDAO = this.workflowBeanService.getMaPSeqDAOBeanService().getWorkflowRunAttemptDAO();
 
         try {
-            List<Workflow> workflowList = workflowDAO.findByName("NCGenesDX");
-            if (workflowList == null || (workflowList != null && workflowList.isEmpty())) {
-                logger.error("No Workflow Found: {}", "NCGenesDX");
+            Workflow workflow = null;
+            List<Workflow> workflowList = workflowDAO.findByName(getWorkflowName());
+            if (CollectionUtils.isEmpty(workflowList)) {
+                workflow = new Workflow(getWorkflowName());
+                workflow.setId(workflowDAO.save(workflow));
+            } else {
+                workflow = workflowList.get(0);
+            }
+
+            if (workflow == null) {
+                logger.error("Could not find or create {} workflow", getWorkflowName());
                 return;
             }
-            Workflow workflow = workflowList.get(0);
             List<WorkflowRunAttempt> attempts = workflowRunAttemptDAO.findEnqueued(workflow.getId());
-            if (attempts != null && !attempts.isEmpty()) {
+            if (CollectionUtils.isNotEmpty(attempts)) {
                 logger.info("dequeuing {} WorkflowRunAttempt", attempts.size());
                 for (WorkflowRunAttempt attempt : attempts) {
 
@@ -71,6 +81,14 @@ public class NCGenesDXWorkflowExecutorTask extends TimerTask {
             e.printStackTrace();
         }
 
+    }
+
+    public String getWorkflowName() {
+        return workflowName;
+    }
+
+    public void setWorkflowName(String workflowName) {
+        this.workflowName = workflowName;
     }
 
     public WorkflowBeanService getWorkflowBeanService() {
