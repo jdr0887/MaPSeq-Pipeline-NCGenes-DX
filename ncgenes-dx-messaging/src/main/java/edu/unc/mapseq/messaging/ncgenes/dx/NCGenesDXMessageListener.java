@@ -18,7 +18,6 @@ import edu.unc.mapseq.dao.MaPSeqDAOBeanService;
 import edu.unc.mapseq.dao.MaPSeqDAOException;
 import edu.unc.mapseq.dao.WorkflowDAO;
 import edu.unc.mapseq.dao.WorkflowRunAttemptDAO;
-import edu.unc.mapseq.dao.WorkflowRunDAO;
 import edu.unc.mapseq.dao.model.Workflow;
 import edu.unc.mapseq.dao.model.WorkflowRun;
 import edu.unc.mapseq.dao.model.WorkflowRunAttempt;
@@ -74,7 +73,6 @@ public class NCGenesDXMessageListener extends AbstractSequencingMessageListener 
 
         MaPSeqDAOBeanService daoBean = getWorkflowBeanService().getMaPSeqDAOBeanService();
         WorkflowDAO workflowDAO = daoBean.getWorkflowDAO();
-        WorkflowRunDAO workflowRunDAO = daoBean.getWorkflowRunDAO();
         WorkflowRunAttemptDAO workflowRunAttemptDAO = daoBean.getWorkflowRunAttemptDAO();
 
         try {
@@ -85,7 +83,6 @@ public class NCGenesDXMessageListener extends AbstractSequencingMessageListener 
             }
             Workflow workflow = workflowList.get(0);
             WorkflowRun workflowRun = createWorkflowRun(workflowMessage, workflow);
-            workflowRun.setId(workflowRunDAO.save(workflowRun));
             WorkflowRunAttempt attempt = new WorkflowRunAttempt();
             attempt.setStatus(WorkflowRunAttemptStatusType.PENDING);
             attempt.setWorkflowRun(workflowRun);
