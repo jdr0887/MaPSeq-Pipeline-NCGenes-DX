@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 
 public class NCGenesDXMessageService {
 
-    private final Logger logger = LoggerFactory.getLogger(NCGenesDXMessageService.class);
+    private static final Logger logger = LoggerFactory.getLogger(NCGenesDXMessageService.class);
 
     private Connection connection;
 

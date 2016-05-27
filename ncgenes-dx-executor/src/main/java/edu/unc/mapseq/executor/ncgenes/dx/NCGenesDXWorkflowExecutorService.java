@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory;
 
 public class NCGenesDXWorkflowExecutorService {
 
-    private final Logger logger = LoggerFactory.getLogger(NCGenesDXWorkflowExecutorService.class);
+    private static final Logger logger = LoggerFactory.getLogger(NCGenesDXWorkflowExecutorService.class);
 
     private final Timer mainTimer = new Timer();
 
