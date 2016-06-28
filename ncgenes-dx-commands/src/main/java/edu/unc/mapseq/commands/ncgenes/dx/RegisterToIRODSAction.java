@@ -1,5 +1,6 @@
 package edu.unc.mapseq.commands.ncgenes.dx;
 
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.apache.karaf.shell.api.action.Action;
@@ -11,8 +12,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.unc.mapseq.commons.ncgenes.dx.RegisterToIRODSRunnable;
-import edu.unc.mapseq.config.MaPSeqConfigurationService;
 import edu.unc.mapseq.dao.MaPSeqDAOBeanService;
+import edu.unc.mapseq.workflow.SystemType;
 
 @Command(scope = "ncgenes-dx", name = "register-to-irods", description = "Register a NCGenesDX sample output to iRODS")
 @Service
@@ -22,9 +23,6 @@ public class RegisterToIRODSAction implements Action {
 
     @Reference
     private MaPSeqDAOBeanService maPSeqDAOBeanService;
-
-    @Reference
-    private MaPSeqConfigurationService maPSeqConfigurationService;
 
     @Argument(index = 0, name = "sampleId", required = true, multiValued = false)
     private Long sampleId;
@@ -38,13 +36,10 @@ public class RegisterToIRODSAction implements Action {
     @Override
     public Object execute() throws Exception {
         logger.debug("ENTERING execute()");
-        RegisterToIRODSRunnable runnable = new RegisterToIRODSRunnable();
-        runnable.setMaPSeqDAOBeanService(maPSeqDAOBeanService);
-        runnable.setMaPSeqConfigurationService(maPSeqConfigurationService);
-        runnable.setSampleId(sampleId);
-        runnable.setDx(dx);
-        runnable.setVersion(version);
-        Executors.newSingleThreadExecutor().execute(runnable);
+        ExecutorService es = Executors.newSingleThreadExecutor();
+        RegisterToIRODSRunnable runnable = new RegisterToIRODSRunnable(maPSeqDAOBeanService, sampleId, version, dx, SystemType.PRODUCTION);
+        es.submit(runnable);
+        es.shutdown();
         return null;
     }
 
