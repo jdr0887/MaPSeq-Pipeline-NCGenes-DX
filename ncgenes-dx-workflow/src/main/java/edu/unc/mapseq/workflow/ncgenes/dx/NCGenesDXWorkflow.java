@@ -4,10 +4,10 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -41,6 +41,7 @@ import edu.unc.mapseq.module.sequencing.picard.PicardSortSAMCLI;
 import edu.unc.mapseq.module.sequencing.samtools.SAMToolsIndex;
 import edu.unc.mapseq.module.sequencing.samtools.SAMToolsIndexCLI;
 import edu.unc.mapseq.module.sequencing.samtools.SAMToolsViewCLI;
+import edu.unc.mapseq.workflow.SystemType;
 import edu.unc.mapseq.workflow.WorkflowException;
 import edu.unc.mapseq.workflow.core.WorkflowUtil;
 import edu.unc.mapseq.workflow.sequencing.AbstractSequencingWorkflow;
@@ -60,10 +61,8 @@ public class NCGenesDXWorkflow extends AbstractSequencingWorkflow {
     }
 
     @Override
-    public String getVersion() {
-        ResourceBundle bundle = ResourceBundle.getBundle("edu/unc/mapseq/workflow/ncgenes/dx/workflow");
-        String version = bundle.getString("version");
-        return StringUtils.isNotEmpty(version) ? version : "0.0.1-SNAPSHOT";
+    public SystemType getSystem() {
+        return SystemType.PRODUCTION;
     }
 
     @Override
@@ -82,7 +81,8 @@ public class NCGenesDXWorkflow extends AbstractSequencingWorkflow {
 
         String siteName = getWorkflowBeanService().getAttributes().get("siteName");
         String referenceSequence = getWorkflowBeanService().getAttributes().get("referenceSequence");
-        String icSNPIntervalList = getWorkflowBeanService().getAttributes().get("icSNPIntervalList");
+        // String icSNPIntervalList = getWorkflowBeanService().getAttributes().get("icSNPIntervalList");
+        
         Boolean isIncidental = Boolean.FALSE;
         Workflow ncgenesWorkflow = null;
         try {
@@ -311,38 +311,39 @@ public class NCGenesDXWorkflow extends AbstractSequencingWorkflow {
         WorkflowRunAttempt attempt = getWorkflowRunAttempt();
         WorkflowRun workflowRun = attempt.getWorkflowRun();
 
-        ExecutorService executorService = Executors.newSingleThreadExecutor();
+        ExecutorService es = Executors.newSingleThreadExecutor();
 
-        for (Sample sample : sampleSet) {
+        try {
+            for (Sample sample : sampleSet) {
 
-            if ("Undetermined".equals(sample.getBarcode())) {
-                continue;
-            }
+                if ("Undetermined".equals(sample.getBarcode())) {
+                    continue;
+                }
 
-            Set<Attribute> attributeSet = workflowRun.getAttributes();
-            if (CollectionUtils.isNotEmpty(attributeSet)) {
-                Iterator<Attribute> attributeIter = attributeSet.iterator();
-                while (attributeIter.hasNext()) {
-                    Attribute attribute = attributeIter.next();
-                    if ("GATKDepthOfCoverage.interval_list.version".equals(attribute.getName())) {
-                        version = attribute.getValue();
-                    }
-                    if ("SAMToolsView.dx.id".equals(attribute.getName())) {
-                        dx = attribute.getValue();
+                Set<Attribute> attributeSet = workflowRun.getAttributes();
+                if (CollectionUtils.isNotEmpty(attributeSet)) {
+                    Iterator<Attribute> attributeIter = attributeSet.iterator();
+                    while (attributeIter.hasNext()) {
+                        Attribute attribute = attributeIter.next();
+                        if ("GATKDepthOfCoverage.interval_list.version".equals(attribute.getName())) {
+                            version = attribute.getValue();
+                        }
+                        if ("SAMToolsView.dx.id".equals(attribute.getName())) {
+                            dx = attribute.getValue();
+                        }
                     }
                 }
+
+                RegisterToIRODSRunnable runnable = new RegisterToIRODSRunnable(getWorkflowBeanService().getMaPSeqDAOBeanService(),
+                        sample.getId(), dx, version, getSystem());
+                es.submit(runnable);
+
             }
-
-            RegisterToIRODSRunnable runnable = new RegisterToIRODSRunnable();
-            runnable.setMaPSeqDAOBeanService(getWorkflowBeanService().getMaPSeqDAOBeanService());
-            runnable.setMaPSeqConfigurationService(getWorkflowBeanService().getMaPSeqConfigurationService());
-            runnable.setSampleId(sample.getId());
-            runnable.setDx(dx);
-            runnable.setVersion(version);
-            executorService.submit(runnable);
-
+            es.shutdown();
+            es.awaitTermination(1L, TimeUnit.HOURS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
-        executorService.shutdown();
 
     }
 
