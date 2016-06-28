@@ -27,6 +27,16 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
+      <groupId>edu.unc.mapseq.distribution.mapseq-modules</groupId>
+      <artifactId>mapseq-module-sequencing</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>edu.unc.mapseq.distribution.mapseq-modules</groupId>
+      <artifactId>mapseq-module-core</artifactId>
+      <scope>provided</scope>
+    </dependency>    
+    <dependency>
       <groupId>org.apache.karaf.shell</groupId>
       <artifactId>org.apache.karaf.shell.core</artifactId>
     </dependency>
