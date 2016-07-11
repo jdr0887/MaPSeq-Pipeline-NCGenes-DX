@@ -41,11 +41,11 @@ import edu.unc.mapseq.module.sequencing.picard.PicardSortSAMCLI;
 import edu.unc.mapseq.module.sequencing.samtools.SAMToolsIndex;
 import edu.unc.mapseq.module.sequencing.samtools.SAMToolsIndexCLI;
 import edu.unc.mapseq.module.sequencing.samtools.SAMToolsViewCLI;
-import edu.unc.mapseq.workflow.SystemType;
 import edu.unc.mapseq.workflow.WorkflowException;
 import edu.unc.mapseq.workflow.core.WorkflowUtil;
 import edu.unc.mapseq.workflow.sequencing.AbstractSequencingWorkflow;
 import edu.unc.mapseq.workflow.sequencing.SequencingWorkflowJobFactory;
+import edu.unc.mapseq.workflow.sequencing.SequencingWorkflowUtil;
 
 public class NCGenesDXWorkflow extends AbstractSequencingWorkflow {
 
@@ -53,16 +53,6 @@ public class NCGenesDXWorkflow extends AbstractSequencingWorkflow {
 
     public NCGenesDXWorkflow() {
         super();
-    }
-
-    @Override
-    public String getName() {
-        return NCGenesDXWorkflow.class.getSimpleName().replace("Workflow", "");
-    }
-
-    @Override
-    public SystemType getSystem() {
-        return SystemType.PRODUCTION;
     }
 
     @Override
@@ -82,7 +72,7 @@ public class NCGenesDXWorkflow extends AbstractSequencingWorkflow {
         String siteName = getWorkflowBeanService().getAttributes().get("siteName");
         String referenceSequence = getWorkflowBeanService().getAttributes().get("referenceSequence");
         // String icSNPIntervalList = getWorkflowBeanService().getAttributes().get("icSNPIntervalList");
-        
+
         Boolean isIncidental = Boolean.FALSE;
         Workflow ncgenesWorkflow = null;
         try {
@@ -102,7 +92,8 @@ public class NCGenesDXWorkflow extends AbstractSequencingWorkflow {
 
             logger.debug(sample.toString());
 
-            File outputDirectory = new File(sample.getOutputDirectory(), getName());
+            File outputDirectory = SequencingWorkflowUtil.createOutputDirectory(sample,
+                    getWorkflowRunAttempt().getWorkflowRun().getWorkflow());
             File tmpDirectory = new File(outputDirectory, "tmp");
             tmpDirectory.mkdirs();
 
@@ -150,7 +141,7 @@ public class NCGenesDXWorkflow extends AbstractSequencingWorkflow {
 
             File bamFile = WorkflowUtil.findFileByJobAndMimeTypeAndWorkflowId(getWorkflowBeanService().getMaPSeqDAOBeanService(),
                     fileDataSet, GATKTableRecalibration.class, MimeType.APPLICATION_BAM, ncgenesWorkflow.getId());
-            File ncgenesBaselineDirectory = new File(sample.getOutputDirectory(), "NCGenesBaseline");
+            File ncgenesBaselineDirectory = SequencingWorkflowUtil.createOutputDirectory(sample, ncgenesWorkflow);
 
             if (bamFile == null) {
                 List<File> files = Arrays.asList(ncgenesBaselineDirectory.listFiles((a, b) -> {
@@ -334,8 +325,8 @@ public class NCGenesDXWorkflow extends AbstractSequencingWorkflow {
                     }
                 }
 
-                RegisterToIRODSRunnable runnable = new RegisterToIRODSRunnable(getWorkflowBeanService().getMaPSeqDAOBeanService(),
-                        sample.getId(), dx, version, getSystem());
+                RegisterToIRODSRunnable runnable = new RegisterToIRODSRunnable(getWorkflowBeanService().getMaPSeqDAOBeanService(), sample,
+                        dx, version, getWorkflowRunAttempt().getWorkflowRun());
                 es.submit(runnable);
 
             }
