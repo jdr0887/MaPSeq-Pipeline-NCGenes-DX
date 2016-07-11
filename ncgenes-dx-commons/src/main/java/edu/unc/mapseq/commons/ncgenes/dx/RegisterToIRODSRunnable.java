@@ -20,12 +20,13 @@ import edu.unc.mapseq.dao.MaPSeqDAOBeanService;
 import edu.unc.mapseq.dao.MaPSeqDAOException;
 import edu.unc.mapseq.dao.model.MimeType;
 import edu.unc.mapseq.dao.model.Sample;
+import edu.unc.mapseq.dao.model.Workflow;
+import edu.unc.mapseq.dao.model.WorkflowRun;
 import edu.unc.mapseq.module.core.Zip;
 import edu.unc.mapseq.module.sequencing.gatk.GATKDepthOfCoverage;
 import edu.unc.mapseq.module.sequencing.picard.PicardSortSAM;
 import edu.unc.mapseq.module.sequencing.samtools.SAMToolsIndex;
 import edu.unc.mapseq.module.sequencing.samtools.SAMToolsView;
-import edu.unc.mapseq.workflow.SystemType;
 import edu.unc.mapseq.workflow.sequencing.IRODSBean;
 import edu.unc.mapseq.workflow.sequencing.SequencingWorkflowUtil;
 
@@ -35,46 +36,32 @@ public class RegisterToIRODSRunnable implements Runnable {
 
     private MaPSeqDAOBeanService maPSeqDAOBeanService;
 
-    private Long sampleId;
+    private Sample sample;
 
     private String version;
 
     private String dx;
 
-    private SystemType system;
+    private WorkflowRun workflowRun;
 
-    public RegisterToIRODSRunnable(MaPSeqDAOBeanService maPSeqDAOBeanService, Long sampleId, String version, String dx, SystemType system) {
+    public RegisterToIRODSRunnable(MaPSeqDAOBeanService maPSeqDAOBeanService, Sample sample, String version, String dx,
+            WorkflowRun workflowRun) {
         super();
         this.maPSeqDAOBeanService = maPSeqDAOBeanService;
-        this.sampleId = sampleId;
+        this.sample = sample;
         this.version = version;
         this.dx = dx;
-        this.system = system;
+        this.workflowRun = workflowRun;
     }
 
     @Override
     public void run() {
 
-        Sample sample;
-        try {
-            sample = maPSeqDAOBeanService.getSampleDAO().findById(sampleId);
-        } catch (MaPSeqDAOException e1) {
-            e1.printStackTrace();
-            return;
-        }
-
-        if (sample == null) {
-            logger.error("Sample not found");
-            return;
-        }
-
-        File ncgenesOutputDirectory = new File(sample.getOutputDirectory(), "NCGenesBaseline");
-        File tmpDir = new File(sample.getOutputDirectory(), "tmp");
+        File outputDirectory = SequencingWorkflowUtil.createOutputDirectory(sample, getWorkflowRun().getWorkflow());
+        File tmpDir = new File(outputDirectory, "tmp");
         if (!tmpDir.exists()) {
             tmpDir.mkdirs();
         }
-
-        File outputDirectory = new File(sample.getOutputDirectory(), "NCGenesDX");
 
         List<File> readPairList = SequencingWorkflowUtil.getReadPairList(sample);
 
@@ -110,6 +97,15 @@ public class RegisterToIRODSRunnable implements Runnable {
 
         List<IRODSBean> files2RegisterToIRODS = new ArrayList<IRODSBean>();
 
+        Workflow ncgenesBaselineWorkflow = null;
+        try {
+            ncgenesBaselineWorkflow = maPSeqDAOBeanService.getWorkflowDAO().findByName("NCGenesBaseline").get(0);
+        } catch (MaPSeqDAOException e1) {
+            e1.printStackTrace();
+        }
+
+        File ncgenesOutputDirectory = SequencingWorkflowUtil.createOutputDirectory(sample, ncgenesBaselineWorkflow);
+
         File bwaSAMPairedEndOutFile = new File(ncgenesOutputDirectory, fastqLaneRootName + ".sam");
 
         File fixRGOutput = new File(ncgenesOutputDirectory, bwaSAMPairedEndOutFile.getName().replace(".sam", ".fixed-rg.bam"));
@@ -123,7 +119,7 @@ public class RegisterToIRODSRunnable implements Runnable {
                 new ImmutablePair<String, String>("MaPSeqWorkflowName", "NCGenesDX"),
                 new ImmutablePair<String, String>("MaPSeqStudyName", sample.getStudy().getName()),
                 new ImmutablePair<String, String>("MaPSeqSampleId", sample.getId().toString()),
-                new ImmutablePair<String, String>("MaPSeqSystem", system.getValue()),
+                new ImmutablePair<String, String>("MaPSeqSystem", getWorkflowRun().getWorkflow().getSystem().getValue()),
                 new ImmutablePair<String, String>("MaPSeqFlowcellId", sample.getFlowcell().getId().toString()),
                 new ImmutablePair<String, String>("DxID", dx), new ImmutablePair<String, String>("DxVersion", version));
 
@@ -274,12 +270,12 @@ public class RegisterToIRODSRunnable implements Runnable {
         this.maPSeqDAOBeanService = maPSeqDAOBeanService;
     }
 
-    public Long getSampleId() {
-        return sampleId;
+    public Sample getSample() {
+        return sample;
     }
 
-    public void setSampleId(Long sampleId) {
-        this.sampleId = sampleId;
+    public void setSample(Sample sample) {
+        this.sample = sample;
     }
 
     public String getVersion() {
@@ -296,6 +292,14 @@ public class RegisterToIRODSRunnable implements Runnable {
 
     public void setDx(String dx) {
         this.dx = dx;
+    }
+
+    public WorkflowRun getWorkflowRun() {
+        return workflowRun;
+    }
+
+    public void setWorkflowRun(WorkflowRun workflowRun) {
+        this.workflowRun = workflowRun;
     }
 
 }
