@@ -16,6 +16,7 @@ import edu.unc.mapseq.dao.WorkflowDAO;
 import edu.unc.mapseq.dao.WorkflowRunAttemptDAO;
 import edu.unc.mapseq.dao.model.Workflow;
 import edu.unc.mapseq.dao.model.WorkflowRunAttempt;
+import edu.unc.mapseq.dao.model.WorkflowSystemType;
 import edu.unc.mapseq.workflow.WorkflowBeanService;
 import edu.unc.mapseq.workflow.WorkflowExecutor;
 import edu.unc.mapseq.workflow.WorkflowTPE;
@@ -52,7 +53,7 @@ public class NCGenesDXWorkflowExecutorTask extends TimerTask {
             Workflow workflow = null;
             List<Workflow> workflowList = workflowDAO.findByName(getWorkflowName());
             if (CollectionUtils.isEmpty(workflowList)) {
-                workflow = new Workflow(getWorkflowName());
+                workflow = new Workflow(getWorkflowName(), WorkflowSystemType.PRODUCTION);
                 workflow.setId(workflowDAO.save(workflow));
             } else {
                 workflow = workflowList.get(0);
