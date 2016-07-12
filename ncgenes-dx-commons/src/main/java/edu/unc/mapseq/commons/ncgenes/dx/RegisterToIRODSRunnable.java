@@ -6,7 +6,6 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.renci.common.exec.BashExecutor;
 import org.renci.common.exec.CommandInput;
@@ -63,8 +62,6 @@ public class RegisterToIRODSRunnable implements Runnable {
             tmpDir.mkdirs();
         }
 
-        List<File> readPairList = SequencingWorkflowUtil.getReadPairList(sample);
-
         // assumption: a dash is used as a delimiter between a participantId and
         // the external code
         int idx = sample.getName().lastIndexOf("-");
@@ -74,12 +71,11 @@ public class RegisterToIRODSRunnable implements Runnable {
         // String r1FastqRootName =
         // WorkflowUtil.getRootFastqName(r1FastqFile.getName());
 
-        File r2FastqFile = readPairList.get(1);
-        String r2FastqRootName = SequencingWorkflowUtil.getRootFastqName(r2FastqFile.getName());
+        String rootFileName = String.format("%s_%s_L%03d", sample.getFlowcell().getName(), sample.getBarcode(), sample.getLaneIndex());
 
-        String fastqLaneRootName = StringUtils.removeEnd(r2FastqRootName, "_R2");
-
-        String irodsDirectory = String.format("/MedGenZone/sequence_data/ncgenes/%s/%s", participantId, version);
+        String irodsDirectory = String.format("/MedGenZone/%s/sequencing/ncgenes/analysis/%s/%s/%s/%s",
+                workflowRun.getWorkflow().getSystem().getValue(), sample.getFlowcell().getName(), sample.getName(),
+                workflowRun.getWorkflow().getName(), version);
 
         List<CommandInput> commandInputList = new LinkedList<CommandInput>();
 
@@ -106,7 +102,7 @@ public class RegisterToIRODSRunnable implements Runnable {
 
         File ncgenesOutputDirectory = SequencingWorkflowUtil.createOutputDirectory(sample, ncgenesBaselineWorkflow);
 
-        File bwaSAMPairedEndOutFile = new File(ncgenesOutputDirectory, fastqLaneRootName + ".sam");
+        File bwaSAMPairedEndOutFile = new File(ncgenesOutputDirectory, rootFileName + ".sam");
 
         File fixRGOutput = new File(ncgenesOutputDirectory, bwaSAMPairedEndOutFile.getName().replace(".sam", ".fixed-rg.bam"));
         File picardMarkDuplicatesOutput = new File(ncgenesOutputDirectory, fixRGOutput.getName().replace(".bam", ".deduped.bam"));
@@ -116,7 +112,7 @@ public class RegisterToIRODSRunnable implements Runnable {
 
         List<ImmutablePair<String, String>> attributeList = Arrays.asList(new ImmutablePair<String, String>("ParticipantId", participantId),
                 new ImmutablePair<String, String>("MaPSeqWorkflowVersion", version),
-                new ImmutablePair<String, String>("MaPSeqWorkflowName", "NCGenesDX"),
+                new ImmutablePair<String, String>("MaPSeqWorkflowName", workflowRun.getWorkflow().getName()),
                 new ImmutablePair<String, String>("MaPSeqStudyName", sample.getStudy().getName()),
                 new ImmutablePair<String, String>("MaPSeqSampleId", sample.getId().toString()),
                 new ImmutablePair<String, String>("MaPSeqSystem", getWorkflowRun().getWorkflow().getSystem().getValue()),
