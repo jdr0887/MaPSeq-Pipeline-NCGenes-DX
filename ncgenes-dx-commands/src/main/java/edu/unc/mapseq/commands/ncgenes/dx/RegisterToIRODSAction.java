@@ -13,9 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import edu.unc.mapseq.commons.ncgenes.dx.RegisterToIRODSRunnable;
 import edu.unc.mapseq.dao.MaPSeqDAOBeanService;
-import edu.unc.mapseq.dao.MaPSeqDAOException;
 import edu.unc.mapseq.dao.model.Sample;
-import edu.unc.mapseq.dao.model.WorkflowRun;
 
 @Command(scope = "ncgenes-dx", name = "register-to-irods", description = "Register a NCGenesDX sample output to iRODS")
 @Service
@@ -29,9 +27,6 @@ public class RegisterToIRODSAction implements Action {
     @Option(name = "--sampleId", required = true, multiValued = false)
     private Long sampleId;
 
-    @Option(name = "--workflowRunId", required = true, multiValued = false)
-    private Long workflowRunId;
-
     @Option(name = "--version", required = true, multiValued = false)
     private String version;
 
@@ -41,16 +36,11 @@ public class RegisterToIRODSAction implements Action {
     @Override
     public Object execute() throws Exception {
         logger.debug("ENTERING execute()");
-        try {
-            ExecutorService es = Executors.newSingleThreadExecutor();
-            WorkflowRun workflowRun = maPSeqDAOBeanService.getWorkflowRunDAO().findById(workflowRunId);
-            Sample sample = maPSeqDAOBeanService.getSampleDAO().findById(sampleId);
-            RegisterToIRODSRunnable runnable = new RegisterToIRODSRunnable(maPSeqDAOBeanService, sample, version, dx, workflowRun);
-            es.submit(runnable);
-            es.shutdown();
-        } catch (MaPSeqDAOException e) {
-            logger.error(e.getMessage(), e);
-        }
+        ExecutorService es = Executors.newSingleThreadExecutor();
+        Sample sample = maPSeqDAOBeanService.getSampleDAO().findById(sampleId);
+        RegisterToIRODSRunnable runnable = new RegisterToIRODSRunnable(maPSeqDAOBeanService, sample, version, dx);
+        es.submit(runnable);
+        es.shutdown();
         return null;
     }
 
@@ -76,14 +66,6 @@ public class RegisterToIRODSAction implements Action {
 
     public void setDx(String dx) {
         this.dx = dx;
-    }
-
-    public Long getWorkflowRunId() {
-        return workflowRunId;
-    }
-
-    public void setWorkflowRunId(Long workflowRunId) {
-        this.workflowRunId = workflowRunId;
     }
 
 }
