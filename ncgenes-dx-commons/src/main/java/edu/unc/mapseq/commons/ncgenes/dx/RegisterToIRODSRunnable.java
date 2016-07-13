@@ -73,9 +73,9 @@ public class RegisterToIRODSRunnable implements Runnable {
 
         String rootFileName = String.format("%s_%s_L%03d", sample.getFlowcell().getName(), sample.getBarcode(), sample.getLaneIndex());
 
-        String irodsDirectory = String.format("/MedGenZone/%s/sequencing/ncgenes/analysis/%s/%s/%s/%s",
-                workflowRun.getWorkflow().getSystem().getValue(), sample.getFlowcell().getName(), sample.getName(),
-                workflowRun.getWorkflow().getName(), version);
+        String irodsDirectory = String.format("/MedGenZone/%s/sequencing/ncgenes/analysis/%s/L%03d_%s/%s/%s",
+                workflowRun.getWorkflow().getSystem().getValue(), sample.getFlowcell().getName(), sample.getLaneIndex(),
+                sample.getBarcode(), workflowRun.getWorkflow().getName(), version);
 
         List<CommandInput> commandInputList = new LinkedList<CommandInput>();
 
