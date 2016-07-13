@@ -20,7 +20,6 @@ import edu.unc.mapseq.dao.MaPSeqDAOException;
 import edu.unc.mapseq.dao.model.MimeType;
 import edu.unc.mapseq.dao.model.Sample;
 import edu.unc.mapseq.dao.model.Workflow;
-import edu.unc.mapseq.dao.model.WorkflowRun;
 import edu.unc.mapseq.module.core.Zip;
 import edu.unc.mapseq.module.sequencing.gatk.GATKDepthOfCoverage;
 import edu.unc.mapseq.module.sequencing.picard.PicardSortSAM;
@@ -41,41 +40,38 @@ public class RegisterToIRODSRunnable implements Runnable {
 
     private String dx;
 
-    private WorkflowRun workflowRun;
-
-    public RegisterToIRODSRunnable(MaPSeqDAOBeanService maPSeqDAOBeanService, Sample sample, String version, String dx,
-            WorkflowRun workflowRun) {
+    public RegisterToIRODSRunnable(MaPSeqDAOBeanService maPSeqDAOBeanService, Sample sample, String version, String dx) {
         super();
         this.maPSeqDAOBeanService = maPSeqDAOBeanService;
         this.sample = sample;
         this.version = version;
         this.dx = dx;
-        this.workflowRun = workflowRun;
     }
 
     @Override
     public void run() {
-
-        File outputDirectory = SequencingWorkflowUtil.createOutputDirectory(sample, getWorkflowRun().getWorkflow());
-        File tmpDir = new File(outputDirectory, "tmp");
-        if (!tmpDir.exists()) {
-            tmpDir.mkdirs();
-        }
 
         // assumption: a dash is used as a delimiter between a participantId and
         // the external code
         int idx = sample.getName().lastIndexOf("-");
         String participantId = idx != -1 ? sample.getName().substring(0, idx) : sample.getName();
 
-        // File r1FastqFile = readPairList.get(0);
-        // String r1FastqRootName =
-        // WorkflowUtil.getRootFastqName(r1FastqFile.getName());
+        Workflow workflow = null;
+        try {
+            workflow = maPSeqDAOBeanService.getWorkflowDAO().findByName("NCGenesDX").get(0);
+        } catch (MaPSeqDAOException e1) {
+            e1.printStackTrace();
+        }
 
-        String rootFileName = String.format("%s_%s_L%03d", sample.getFlowcell().getName(), sample.getBarcode(), sample.getLaneIndex());
+        File outputDirectory = SequencingWorkflowUtil.createOutputDirectory(sample, workflow);
+        File tmpDir = new File(outputDirectory, "tmp");
+        if (!tmpDir.exists()) {
+            tmpDir.mkdirs();
+        }
 
         String irodsDirectory = String.format("/MedGenZone/%s/sequencing/ncgenes/analysis/%s/L%03d_%s/%s/%s",
-                workflowRun.getWorkflow().getSystem().getValue(), sample.getFlowcell().getName(), sample.getLaneIndex(),
-                sample.getBarcode(), workflowRun.getWorkflow().getName(), version);
+                workflow.getSystem().getValue(), sample.getFlowcell().getName(), sample.getLaneIndex(), sample.getBarcode(),
+                workflow.getName(), version);
 
         List<CommandInput> commandInputList = new LinkedList<CommandInput>();
 
@@ -93,115 +89,95 @@ public class RegisterToIRODSRunnable implements Runnable {
 
         List<IRODSBean> files2RegisterToIRODS = new ArrayList<IRODSBean>();
 
-        Workflow ncgenesBaselineWorkflow = null;
-        try {
-            ncgenesBaselineWorkflow = maPSeqDAOBeanService.getWorkflowDAO().findByName("NCGenesBaseline").get(0);
-        } catch (MaPSeqDAOException e1) {
-            e1.printStackTrace();
-        }
-
-        File ncgenesOutputDirectory = SequencingWorkflowUtil.createOutputDirectory(sample, ncgenesBaselineWorkflow);
-
-        File bwaSAMPairedEndOutFile = new File(ncgenesOutputDirectory, rootFileName + ".sam");
-
-        File fixRGOutput = new File(ncgenesOutputDirectory, bwaSAMPairedEndOutFile.getName().replace(".sam", ".fixed-rg.bam"));
-        File picardMarkDuplicatesOutput = new File(ncgenesOutputDirectory, fixRGOutput.getName().replace(".bam", ".deduped.bam"));
-        File indelRealignerOut = new File(ncgenesOutputDirectory, picardMarkDuplicatesOutput.getName().replace(".bam", ".realign.bam"));
-        File picardFixMateOutput = new File(ncgenesOutputDirectory, indelRealignerOut.getName().replace(".bam", ".fixmate.bam"));
-        File gatkTableRecalibrationOut = new File(ncgenesOutputDirectory, picardFixMateOutput.getName().replace(".bam", ".recal.bam"));
+        String rootFileName = String.format("%s_%s_L%03d.fixed-rg.deduped.realign.fixmate.recal", sample.getFlowcell().getName(),
+                sample.getBarcode(), sample.getLaneIndex());
 
         List<ImmutablePair<String, String>> attributeList = Arrays.asList(new ImmutablePair<String, String>("ParticipantId", participantId),
                 new ImmutablePair<String, String>("MaPSeqWorkflowVersion", version),
-                new ImmutablePair<String, String>("MaPSeqWorkflowName", workflowRun.getWorkflow().getName()),
+                new ImmutablePair<String, String>("MaPSeqWorkflowName", workflow.getName()),
                 new ImmutablePair<String, String>("MaPSeqStudyName", sample.getStudy().getName()),
                 new ImmutablePair<String, String>("MaPSeqSampleId", sample.getId().toString()),
-                new ImmutablePair<String, String>("MaPSeqSystem", getWorkflowRun().getWorkflow().getSystem().getValue()),
+                new ImmutablePair<String, String>("MaPSeqSystem", workflow.getSystem().getValue()),
                 new ImmutablePair<String, String>("MaPSeqFlowcellId", sample.getFlowcell().getId().toString()),
                 new ImmutablePair<String, String>("DxID", dx), new ImmutablePair<String, String>("DxVersion", version));
 
         List<ImmutablePair<String, String>> attributeListWithJob = new ArrayList<>(attributeList);
         attributeListWithJob.add(new ImmutablePair<String, String>("MaPSeqJobName", GATKDepthOfCoverage.class.getSimpleName()));
         attributeListWithJob.add(new ImmutablePair<String, String>("MaPSeqMimeType", MimeType.TEXT_PLAIN.toString()));
-        files2RegisterToIRODS
-                .add(new IRODSBean(
-                        new File(outputDirectory,
-                                gatkTableRecalibrationOut.getName().replace(".bam",
-                                        String.format(".coverage.v%s.gene.sample_cumulative_coverage_counts", version))),
+        files2RegisterToIRODS.add(new IRODSBean(
+                new File(outputDirectory, String.format("%s.coverage.v%s.gene.sample_cumulative_coverage_counts", rootFileName, version)),
+                attributeListWithJob));
+
+        attributeListWithJob = new ArrayList<>(attributeList);
+        attributeListWithJob.add(new ImmutablePair<String, String>("MaPSeqJobName", GATKDepthOfCoverage.class.getSimpleName()));
+        attributeListWithJob.add(new ImmutablePair<String, String>("MaPSeqMimeType", MimeType.TEXT_PLAIN.toString()));
+        files2RegisterToIRODS.add(new IRODSBean(
+                new File(outputDirectory,
+                        String.format("%s.coverage.v%s.gene.sample_cumulative_coverage_proportions", rootFileName, version)),
+                attributeListWithJob));
+
+        attributeListWithJob = new ArrayList<>(attributeList);
+        attributeListWithJob.add(new ImmutablePair<String, String>("MaPSeqJobName", GATKDepthOfCoverage.class.getSimpleName()));
+        attributeListWithJob.add(new ImmutablePair<String, String>("MaPSeqMimeType", MimeType.TEXT_PLAIN.toString()));
+        files2RegisterToIRODS.add(new IRODSBean(
+                new File(outputDirectory, String.format("%s.coverage.v%s.gene.sample_interval_statistics", rootFileName, version)),
+                attributeListWithJob));
+
+        attributeListWithJob = new ArrayList<>(attributeList);
+        attributeListWithJob.add(new ImmutablePair<String, String>("MaPSeqJobName", GATKDepthOfCoverage.class.getSimpleName()));
+        attributeListWithJob.add(new ImmutablePair<String, String>("MaPSeqMimeType", MimeType.TEXT_PLAIN.toString()));
+        files2RegisterToIRODS.add(new IRODSBean(
+                new File(outputDirectory, String.format("%s.coverage.v%s.gene.sample_interval_summary", rootFileName, version)),
+                attributeListWithJob));
+
+        attributeListWithJob = new ArrayList<>(attributeList);
+        attributeListWithJob.add(new ImmutablePair<String, String>("MaPSeqJobName", GATKDepthOfCoverage.class.getSimpleName()));
+        attributeListWithJob.add(new ImmutablePair<String, String>("MaPSeqMimeType", MimeType.TEXT_PLAIN.toString()));
+        files2RegisterToIRODS.add(
+                new IRODSBean(new File(outputDirectory, String.format("%s.coverage.v%s.gene.sample_statistics", rootFileName, version)),
                         attributeListWithJob));
 
         attributeListWithJob = new ArrayList<>(attributeList);
         attributeListWithJob.add(new ImmutablePair<String, String>("MaPSeqJobName", GATKDepthOfCoverage.class.getSimpleName()));
         attributeListWithJob.add(new ImmutablePair<String, String>("MaPSeqMimeType", MimeType.TEXT_PLAIN.toString()));
-        files2RegisterToIRODS.add(new IRODSBean(
-                new File(outputDirectory,
-                        gatkTableRecalibrationOut.getName().replace(".bam",
-                                String.format(".coverage.v%s.gene.sample_cumulative_coverage_proportions", version))),
-                attributeListWithJob));
-
-        attributeListWithJob = new ArrayList<>(attributeList);
-        attributeListWithJob.add(new ImmutablePair<String, String>("MaPSeqJobName", GATKDepthOfCoverage.class.getSimpleName()));
-        attributeListWithJob.add(new ImmutablePair<String, String>("MaPSeqMimeType", MimeType.TEXT_PLAIN.toString()));
-        files2RegisterToIRODS.add(new IRODSBean(new File(outputDirectory, gatkTableRecalibrationOut.getName().replace(".bam",
-                String.format(".coverage.v%s.gene.sample_interval_statistics", version))), attributeListWithJob));
-
-        attributeListWithJob = new ArrayList<>(attributeList);
-        attributeListWithJob.add(new ImmutablePair<String, String>("MaPSeqJobName", GATKDepthOfCoverage.class.getSimpleName()));
-        attributeListWithJob.add(new ImmutablePair<String, String>("MaPSeqMimeType", MimeType.TEXT_PLAIN.toString()));
-        files2RegisterToIRODS.add(new IRODSBean(new File(outputDirectory,
-                gatkTableRecalibrationOut.getName().replace(".bam", String.format(".coverage.v%s.gene.sample_interval_summary", version))),
-                attributeListWithJob));
-
-        attributeListWithJob = new ArrayList<>(attributeList);
-        attributeListWithJob.add(new ImmutablePair<String, String>("MaPSeqJobName", GATKDepthOfCoverage.class.getSimpleName()));
-        attributeListWithJob.add(new ImmutablePair<String, String>("MaPSeqMimeType", MimeType.TEXT_PLAIN.toString()));
-        files2RegisterToIRODS.add(new IRODSBean(new File(outputDirectory,
-                gatkTableRecalibrationOut.getName().replace(".bam", String.format(".coverage.v%s.gene.sample_statistics", version))),
-                attributeListWithJob));
-
-        attributeListWithJob = new ArrayList<>(attributeList);
-        attributeListWithJob.add(new ImmutablePair<String, String>("MaPSeqJobName", GATKDepthOfCoverage.class.getSimpleName()));
-        attributeListWithJob.add(new ImmutablePair<String, String>("MaPSeqMimeType", MimeType.TEXT_PLAIN.toString()));
-        files2RegisterToIRODS.add(new IRODSBean(
-                new File(outputDirectory,
-                        gatkTableRecalibrationOut.getName().replace(".bam", String.format(".coverage.v%s.gene.sample_summary", version))),
-                attributeListWithJob));
+        files2RegisterToIRODS
+                .add(new IRODSBean(new File(outputDirectory, String.format("%s.coverage.v%s.gene.sample_summary", rootFileName, version)),
+                        attributeListWithJob));
 
         attributeListWithJob = new ArrayList<>(attributeList);
         attributeListWithJob.add(new ImmutablePair<String, String>("MaPSeqJobName", SAMToolsView.class.getSimpleName()));
         attributeListWithJob.add(new ImmutablePair<String, String>("MaPSeqMimeType", MimeType.APPLICATION_BAM.toString()));
-        files2RegisterToIRODS.add(new IRODSBean(
-                new File(outputDirectory,
-                        gatkTableRecalibrationOut.getName().replace(".bam", String.format(".filtered_by_dxid_%s_v%s.bam", dx, version))),
-                attributeListWithJob));
+        files2RegisterToIRODS
+                .add(new IRODSBean(new File(outputDirectory, String.format("%s.filtered_by_dxid_%s_v%s.bam", rootFileName, dx, version)),
+                        attributeListWithJob));
 
         attributeListWithJob = new ArrayList<>(attributeList);
         attributeListWithJob.add(new ImmutablePair<String, String>("MaPSeqJobName", PicardSortSAM.class.getSimpleName()));
         attributeListWithJob.add(new ImmutablePair<String, String>("MaPSeqMimeType", MimeType.APPLICATION_BAM.toString()));
-        files2RegisterToIRODS.add(new IRODSBean(new File(outputDirectory,
-                gatkTableRecalibrationOut.getName().replace(".bam", String.format(".filtered_by_dxid_%s_v%s.sorted.bam", dx, version))),
-                attributeListWithJob));
+        files2RegisterToIRODS.add(
+                new IRODSBean(new File(outputDirectory, String.format("%s.filtered_by_dxid_%s_v%s.sorted.bam", rootFileName, dx, version)),
+                        attributeListWithJob));
 
         attributeListWithJob = new ArrayList<>(attributeList);
         attributeListWithJob.add(new ImmutablePair<String, String>("MaPSeqJobName", SAMToolsIndex.class.getSimpleName()));
         attributeListWithJob.add(new ImmutablePair<String, String>("MaPSeqMimeType", MimeType.APPLICATION_BAM_INDEX.toString()));
-        files2RegisterToIRODS.add(new IRODSBean(new File(outputDirectory,
-                gatkTableRecalibrationOut.getName().replace(".bam", String.format(".filtered_by_dxid_%s_v%s.sorted.bai", dx, version))),
-                attributeListWithJob));
+        files2RegisterToIRODS.add(
+                new IRODSBean(new File(outputDirectory, String.format("%s.filtered_by_dxid_%s_v%s.sorted.bai", rootFileName, dx, version)),
+                        attributeListWithJob));
 
         attributeListWithJob = new ArrayList<>(attributeList);
         attributeListWithJob.add(new ImmutablePair<String, String>("MaPSeqJobName", Zip.class.getSimpleName()));
         attributeListWithJob.add(new ImmutablePair<String, String>("MaPSeqMimeType", MimeType.APPLICATION_ZIP.toString()));
-        files2RegisterToIRODS.add(new IRODSBean(new File(outputDirectory,
-                gatkTableRecalibrationOut.getName().replace(".bam", String.format(".filtered_by_dxid_%s_v%s.sorted.zip", dx, version))),
-                attributeListWithJob));
+        files2RegisterToIRODS.add(
+                new IRODSBean(new File(outputDirectory, String.format("%s.filtered_by_dxid_%s_v%s.sorted.zip", rootFileName, dx, version)),
+                        attributeListWithJob));
 
         attributeListWithJob = new ArrayList<>(attributeList);
         attributeListWithJob.add(new ImmutablePair<String, String>("MaPSeqJobName", Zip.class.getSimpleName()));
         attributeListWithJob.add(new ImmutablePair<String, String>("MaPSeqMimeType", MimeType.TEXT_VCF.toString()));
-        files2RegisterToIRODS.add(new IRODSBean(
-                new File(outputDirectory,
-                        gatkTableRecalibrationOut.getName().replace(".bam", String.format(".filtered_by_dxid_%s_v%s.vcf", dx, version))),
-                attributeListWithJob));
+        files2RegisterToIRODS
+                .add(new IRODSBean(new File(outputDirectory, String.format("%s.filtered_by_dxid_%s_v%s.vcf", rootFileName, dx, version)),
+                        attributeListWithJob));
 
         for (IRODSBean bean : files2RegisterToIRODS) {
 
@@ -227,7 +203,7 @@ public class RegisterToIRODSRunnable implements Runnable {
             commandInput.setExitImmediately(Boolean.FALSE);
             sb = new StringBuilder();
             for (ImmutablePair<String, String> attribute : bean.getAttributes()) {
-                sb.append(String.format("$IRODS_HOME/imeta add -d %s/%s %s %s GeneScreen%n", irodsDirectory, bean.getFile().getName(),
+                sb.append(String.format("$IRODS_HOME/imeta add -d %s/%s %s %s NCGenesDX%n", irodsDirectory, bean.getFile().getName(),
                         attribute.getLeft(), attribute.getRight()));
             }
             commandInput.setCommand(sb.toString());
@@ -288,14 +264,6 @@ public class RegisterToIRODSRunnable implements Runnable {
 
     public void setDx(String dx) {
         this.dx = dx;
-    }
-
-    public WorkflowRun getWorkflowRun() {
-        return workflowRun;
-    }
-
-    public void setWorkflowRun(WorkflowRun workflowRun) {
-        this.workflowRun = workflowRun;
     }
 
 }

@@ -326,7 +326,7 @@ public class NCGenesDXWorkflow extends AbstractSequencingWorkflow {
                 }
 
                 RegisterToIRODSRunnable runnable = new RegisterToIRODSRunnable(getWorkflowBeanService().getMaPSeqDAOBeanService(), sample,
-                        dx, version, getWorkflowRunAttempt().getWorkflowRun());
+                        dx, version);
                 es.submit(runnable);
 
             }
