@@ -1,6 +1,9 @@
 package edu.unc.mapseq.commons.ncgenes.dx;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Arrays;
 
 import org.slf4j.Logger;
@@ -34,7 +37,7 @@ public class AssertExpectedOutputFilesExistRunnable implements Runnable {
 
     @Override
     public void run() {
-
+        logger.debug("ENTERING run()");
         Workflow workflow = null;
         try {
             workflow = maPSeqDAOBeanService.getWorkflowDAO().findByName("NCGenesDX").get(0);
@@ -66,14 +69,20 @@ public class AssertExpectedOutputFilesExistRunnable implements Runnable {
         File zipFile = new File(outputDirectory, String.format("%s.filtered_by_dxid_%s_v%s.sorted.zip", rootFileName, dx, version));
         File vcfFile = new File(outputDirectory, String.format("%s.filtered_by_dxid_%s_v%s.vcf", rootFileName, dx, version));
 
-        for (File f : Arrays.asList(sampleCumulativeCoverageCountsFile, sampleCumulativeCoverageProportionsFile, sampleIntervalStatsFile,
-                sampleIntervalSummaryFile, sampleStatsFile, sampleSummaryFile, filteredBAMFile, filteredSortedBAMFile,
-                filteredSortedBAIFile, zipFile, vcfFile)) {
+        try (FileWriter fw = new FileWriter(new File("/tmp", "missingNCGenesDXFiles.txt")); BufferedWriter bw = new BufferedWriter(fw)) {
+            for (File f : Arrays.asList(sampleCumulativeCoverageCountsFile, sampleCumulativeCoverageProportionsFile,
+                    sampleIntervalStatsFile, sampleIntervalSummaryFile, sampleStatsFile, sampleSummaryFile, filteredBAMFile,
+                    filteredSortedBAMFile, filteredSortedBAIFile, zipFile, vcfFile)) {
 
-            if (!f.exists()) {
-                logger.warn("file to register doesn't exist: {}", f.getAbsolutePath());
+                if (!f.exists()) {
+                    bw.write(f.getParentFile().getAbsolutePath());
+                    bw.newLine();
+                    bw.flush();
+                }
+
             }
-
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
     }

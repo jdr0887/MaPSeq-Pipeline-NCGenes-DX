@@ -1,6 +1,9 @@
 package edu.unc.mapseq.commons.ncgenes.dx;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -42,6 +45,7 @@ public class AssertExpectedOutputFilesExistInIRODSRunnable implements Runnable {
 
     @Override
     public void run() {
+        logger.debug("ENTERING run()");
 
         Workflow workflow = null;
         try {
@@ -95,19 +99,26 @@ public class AssertExpectedOutputFilesExistInIRODSRunnable implements Runnable {
         File mapseqrc = new File(System.getProperty("user.home"), ".mapseqrc");
         Executor executor = BashExecutor.getInstance();
 
-        for (CommandInput ci : commandInputList) {
-            try {
-                commandOutput = executor.execute(ci, mapseqrc);
-                if (commandOutput.getExitCode() != 0) {
-                    logger.info("commandOutput.getExitCode(): {}", commandOutput.getExitCode());
-                    logger.warn("command failed: {}", ci.getCommand());
-                }
-                logger.debug("commandOutput.getStdout(): {}", commandOutput.getStdout());
-            } catch (ExecutorException e) {
-                if (commandOutput != null) {
-                    logger.warn("commandOutput.getStderr(): {}", commandOutput.getStderr());
+        try (FileWriter fw = new FileWriter(new File("/tmp", "missingNCGenesDXFilesInIRODS.txt"));
+                BufferedWriter bw = new BufferedWriter(fw)) {
+
+            for (CommandInput ci : commandInputList) {
+                try {
+                    commandOutput = executor.execute(ci, mapseqrc);
+                    if (commandOutput.getExitCode() != 0) {
+                        bw.write(ci.getCommand());
+                        bw.newLine();
+                        bw.flush();
+                    }
+                } catch (ExecutorException e) {
+                    if (commandOutput != null) {
+                        logger.warn("commandOutput.getStderr(): {}", commandOutput.getStderr());
+                    }
                 }
             }
+
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
     }
