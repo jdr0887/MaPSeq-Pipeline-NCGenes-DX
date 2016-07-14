@@ -1,9 +1,6 @@
 package edu.unc.mapseq.commons.ncgenes.dx;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -99,26 +96,17 @@ public class AssertExpectedOutputFilesExistInIRODSRunnable implements Runnable {
         File mapseqrc = new File(System.getProperty("user.home"), ".mapseqrc");
         Executor executor = BashExecutor.getInstance();
 
-        try (FileWriter fw = new FileWriter(new File("/tmp", "missingNCGenesDXFilesInIRODS.txt"));
-                BufferedWriter bw = new BufferedWriter(fw)) {
-
-            for (CommandInput ci : commandInputList) {
-                try {
-                    commandOutput = executor.execute(ci, mapseqrc);
-                    if (commandOutput.getExitCode() != 0) {
-                        bw.write(ci.getCommand());
-                        bw.newLine();
-                        bw.flush();
-                    }
-                } catch (ExecutorException e) {
-                    if (commandOutput != null) {
-                        logger.warn("commandOutput.getStderr(): {}", commandOutput.getStderr());
-                    }
+        for (CommandInput ci : commandInputList) {
+            try {
+                commandOutput = executor.execute(ci, mapseqrc);
+                if (commandOutput.getExitCode() != 0) {
+                    logger.warn(ci.getCommand());
+                }
+            } catch (ExecutorException e) {
+                if (commandOutput != null) {
+                    logger.warn("commandOutput.getStderr(): {}", commandOutput.getStderr());
                 }
             }
-
-        } catch (IOException e) {
-            e.printStackTrace();
         }
 
     }
