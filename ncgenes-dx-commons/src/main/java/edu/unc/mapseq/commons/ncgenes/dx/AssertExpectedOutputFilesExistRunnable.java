@@ -70,7 +70,7 @@ public class AssertExpectedOutputFilesExistRunnable implements Runnable {
                 sampleIntervalSummaryFile, sampleStatsFile, sampleSummaryFile, filteredBAMFile, filteredSortedBAMFile,
                 filteredSortedBAIFile, zipFile, vcfFile)) {
             if (!f.exists()) {
-                logger.warn(f.getParentFile().getAbsolutePath());
+                logger.warn(f.getAbsolutePath());
             }
         }
     }
