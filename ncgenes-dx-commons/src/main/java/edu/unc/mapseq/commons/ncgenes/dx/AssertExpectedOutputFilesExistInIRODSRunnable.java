@@ -100,7 +100,7 @@ public class AssertExpectedOutputFilesExistInIRODSRunnable implements Runnable {
             try {
                 commandOutput = executor.execute(ci, mapseqrc);
                 if (commandOutput.getExitCode() != 0) {
-                    logger.warn(ci.getCommand());
+                    logger.warn(ci.getCommand().split(" ")[1]);
                 }
             } catch (ExecutorException e) {
                 if (commandOutput != null) {
