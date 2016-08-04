@@ -38,7 +38,7 @@ public class RegisterToIRODSAction implements Action {
         logger.debug("ENTERING execute()");
         ExecutorService es = Executors.newSingleThreadExecutor();
         Sample sample = maPSeqDAOBeanService.getSampleDAO().findById(sampleId);
-        RegisterToIRODSRunnable runnable = new RegisterToIRODSRunnable(maPSeqDAOBeanService, sample, version, dx);
+        RegisterToIRODSRunnable runnable = new RegisterToIRODSRunnable(maPSeqDAOBeanService, sample, dx, version);
         es.submit(runnable);
         es.shutdown();
         return null;
