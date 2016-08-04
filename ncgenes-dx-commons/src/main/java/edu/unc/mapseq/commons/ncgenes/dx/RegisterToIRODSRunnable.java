@@ -40,7 +40,7 @@ public class RegisterToIRODSRunnable implements Runnable {
 
     private String dx;
 
-    public RegisterToIRODSRunnable(MaPSeqDAOBeanService maPSeqDAOBeanService, Sample sample, String version, String dx) {
+    public RegisterToIRODSRunnable(MaPSeqDAOBeanService maPSeqDAOBeanService, Sample sample, String dx, String version) {
         super();
         this.maPSeqDAOBeanService = maPSeqDAOBeanService;
         this.sample = sample;
