@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import edu.unc.mapseq.commons.ncgenes.dx.RegisterToIRODSRunnable;
 import edu.unc.mapseq.dao.MaPSeqDAOBeanService;
 import edu.unc.mapseq.dao.model.Sample;
+import edu.unc.mapseq.dao.model.WorkflowRunAttempt;
 
 @Command(scope = "ncgenes-dx", name = "register-to-irods", description = "Register a NCGenesDX sample output to iRODS")
 @Service
@@ -33,12 +34,16 @@ public class RegisterToIRODSAction implements Action {
     @Option(name = "--dx", required = true, multiValued = false)
     private String dx;
 
+    @Option(name = "--workflowRunAttemptId", required = true, multiValued = false)
+    private Long workflowRunAttemptId;
+
     @Override
     public Object execute() throws Exception {
         logger.debug("ENTERING execute()");
         ExecutorService es = Executors.newSingleThreadExecutor();
         Sample sample = maPSeqDAOBeanService.getSampleDAO().findById(sampleId);
-        RegisterToIRODSRunnable runnable = new RegisterToIRODSRunnable(maPSeqDAOBeanService, sample, dx, version);
+        WorkflowRunAttempt attempt = maPSeqDAOBeanService.getWorkflowRunAttemptDAO().findById(workflowRunAttemptId);
+        RegisterToIRODSRunnable runnable = new RegisterToIRODSRunnable(maPSeqDAOBeanService, attempt, sample, dx, version);
         es.submit(runnable);
         es.shutdown();
         return null;
@@ -66,6 +71,14 @@ public class RegisterToIRODSAction implements Action {
 
     public void setDx(String dx) {
         this.dx = dx;
+    }
+
+    public Long getWorkflowRunAttemptId() {
+        return workflowRunAttemptId;
+    }
+
+    public void setWorkflowRunAttemptId(Long workflowRunAttemptId) {
+        this.workflowRunAttemptId = workflowRunAttemptId;
     }
 
 }
