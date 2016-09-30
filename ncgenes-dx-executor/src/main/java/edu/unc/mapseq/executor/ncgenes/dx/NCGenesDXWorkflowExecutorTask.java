@@ -63,7 +63,7 @@ public class NCGenesDXWorkflowExecutorTask extends TimerTask {
                 logger.error("Could not find or create {} workflow", getWorkflowName());
                 return;
             }
-            
+
             BundleContext bundleContext = FrameworkUtil.getBundle(getClass()).getBundleContext();
             Bundle bundle = bundleContext.getBundle();
             String version = bundle.getVersion().toString();
