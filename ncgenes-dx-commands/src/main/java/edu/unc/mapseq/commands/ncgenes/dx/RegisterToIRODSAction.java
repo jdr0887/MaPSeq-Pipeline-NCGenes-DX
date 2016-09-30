@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 
 import edu.unc.mapseq.commons.ncgenes.dx.RegisterToIRODSRunnable;
 import edu.unc.mapseq.dao.MaPSeqDAOBeanService;
-import edu.unc.mapseq.dao.model.Sample;
 import edu.unc.mapseq.dao.model.WorkflowRunAttempt;
 
 @Command(scope = "ncgenes-dx", name = "register-to-irods", description = "Register a NCGenesDX sample output to iRODS")
@@ -25,15 +24,6 @@ public class RegisterToIRODSAction implements Action {
     @Reference
     private MaPSeqDAOBeanService maPSeqDAOBeanService;
 
-    @Option(name = "--sampleId", required = true, multiValued = false)
-    private Long sampleId;
-
-    @Option(name = "--version", required = true, multiValued = false)
-    private String version;
-
-    @Option(name = "--dx", required = true, multiValued = false)
-    private String dx;
-
     @Option(name = "--workflowRunAttemptId", required = true, multiValued = false)
     private Long workflowRunAttemptId;
 
@@ -41,36 +31,11 @@ public class RegisterToIRODSAction implements Action {
     public Object execute() throws Exception {
         logger.debug("ENTERING execute()");
         ExecutorService es = Executors.newSingleThreadExecutor();
-        Sample sample = maPSeqDAOBeanService.getSampleDAO().findById(sampleId);
         WorkflowRunAttempt attempt = maPSeqDAOBeanService.getWorkflowRunAttemptDAO().findById(workflowRunAttemptId);
-        RegisterToIRODSRunnable runnable = new RegisterToIRODSRunnable(maPSeqDAOBeanService, attempt, sample, dx, version);
+        RegisterToIRODSRunnable runnable = new RegisterToIRODSRunnable(maPSeqDAOBeanService, attempt);
         es.submit(runnable);
         es.shutdown();
         return null;
-    }
-
-    public Long getSampleId() {
-        return sampleId;
-    }
-
-    public void setSampleId(Long sampleId) {
-        this.sampleId = sampleId;
-    }
-
-    public String getVersion() {
-        return version;
-    }
-
-    public void setVersion(String version) {
-        this.version = version;
-    }
-
-    public String getDx() {
-        return dx;
-    }
-
-    public void setDx(String dx) {
-        this.dx = dx;
     }
 
     public Long getWorkflowRunAttemptId() {
