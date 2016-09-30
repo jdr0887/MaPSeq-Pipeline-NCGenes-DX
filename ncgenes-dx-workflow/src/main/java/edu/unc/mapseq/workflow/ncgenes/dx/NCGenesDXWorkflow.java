@@ -66,7 +66,8 @@ public class NCGenesDXWorkflow extends AbstractSequencingWorkflow {
         String dx = null;
         String summaryCoverageThreshold = "1,2,5,8,10,15,20,30,50";
 
-        Set<Sample> sampleSet = getAggregatedSamples();
+        Set<Sample> sampleSet = SequencingWorkflowUtil.getAggregatedSamples(getWorkflowBeanService().getMaPSeqDAOBeanService(),
+                getWorkflowRunAttempt());
         logger.info("sampleSet.size(): {}", sampleSet.size());
 
         String siteName = getWorkflowBeanService().getAttributes().get("siteName");
@@ -294,42 +295,13 @@ public class NCGenesDXWorkflow extends AbstractSequencingWorkflow {
     public void postRun() throws WorkflowException {
         logger.info("ENTERING postRun()");
 
-        Set<Sample> sampleSet = getAggregatedSamples();
-
-        String dx = null;
-        String version = null;
-
-        WorkflowRunAttempt attempt = getWorkflowRunAttempt();
-        WorkflowRun workflowRun = attempt.getWorkflowRun();
-
-        ExecutorService es = Executors.newSingleThreadExecutor();
-
         try {
-            for (Sample sample : sampleSet) {
+            ExecutorService es = Executors.newSingleThreadExecutor();
 
-                if ("Undetermined".equals(sample.getBarcode())) {
-                    continue;
-                }
+            RegisterToIRODSRunnable runnable = new RegisterToIRODSRunnable(getWorkflowBeanService().getMaPSeqDAOBeanService(),
+                    getWorkflowRunAttempt());
+            es.submit(runnable);
 
-                Set<Attribute> attributeSet = workflowRun.getAttributes();
-                if (CollectionUtils.isNotEmpty(attributeSet)) {
-                    Iterator<Attribute> attributeIter = attributeSet.iterator();
-                    while (attributeIter.hasNext()) {
-                        Attribute attribute = attributeIter.next();
-                        if ("GATKDepthOfCoverage.interval_list.version".equals(attribute.getName())) {
-                            version = attribute.getValue();
-                        }
-                        if ("SAMToolsView.dx.id".equals(attribute.getName())) {
-                            dx = attribute.getValue();
-                        }
-                    }
-                }
-
-                RegisterToIRODSRunnable runnable = new RegisterToIRODSRunnable(getWorkflowBeanService().getMaPSeqDAOBeanService(),
-                        getWorkflowRunAttempt(), sample, dx, version);
-                es.submit(runnable);
-
-            }
             es.shutdown();
             es.awaitTermination(1L, TimeUnit.HOURS);
         } catch (InterruptedException e) {
