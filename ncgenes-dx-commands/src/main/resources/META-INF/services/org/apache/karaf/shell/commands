@@ -1,4 +1,5 @@
 edu.unc.mapseq.commands.ncgenes.dx.RegisterToIRODSAction
+edu.unc.mapseq.commands.ncgenes.dx.RegisterAllToIRODSAction
 edu.unc.mapseq.commands.ncgenes.dx.AssertExpectedOutputFilesExistAction
 edu.unc.mapseq.commands.ncgenes.dx.AssertExpectedOutputFilesExistInIRODSAction
 edu.unc.mapseq.commands.ncgenes.dx.RunWorkflowAction
