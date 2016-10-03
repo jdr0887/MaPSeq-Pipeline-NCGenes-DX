@@ -20,7 +20,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.unc.mapseq.dao.MaPSeqDAOBeanService;
-import edu.unc.mapseq.dao.MaPSeqDAOException;
 import edu.unc.mapseq.dao.model.Attribute;
 import edu.unc.mapseq.dao.model.Job;
 import edu.unc.mapseq.dao.model.MimeType;
@@ -34,7 +33,6 @@ import edu.unc.mapseq.module.sequencing.gatk.GATKDepthOfCoverage;
 import edu.unc.mapseq.module.sequencing.picard.PicardSortSAM;
 import edu.unc.mapseq.module.sequencing.samtools.SAMToolsIndex;
 import edu.unc.mapseq.module.sequencing.samtools.SAMToolsView;
-import edu.unc.mapseq.workflow.WorkflowException;
 import edu.unc.mapseq.workflow.sequencing.IRODSBean;
 import edu.unc.mapseq.workflow.sequencing.SequencingWorkflowUtil;
 
@@ -53,6 +51,7 @@ public class RegisterToIRODSRunnable implements Runnable {
     public RegisterToIRODSRunnable(MaPSeqDAOBeanService mapseqDAOBeanService, WorkflowRunAttempt workflowRunAttempt) {
         super();
         this.mapseqDAOBeanService = mapseqDAOBeanService;
+        this.workflowRunAttempt = workflowRunAttempt;
     }
 
     @Override
@@ -312,7 +311,7 @@ public class RegisterToIRODSRunnable implements Runnable {
 
             }
 
-        } catch (WorkflowException | MaPSeqDAOException e) {
+        } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
     }
