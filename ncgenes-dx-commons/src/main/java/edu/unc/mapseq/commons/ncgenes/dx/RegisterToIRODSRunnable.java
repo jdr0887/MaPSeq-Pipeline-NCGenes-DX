@@ -57,6 +57,7 @@ public class RegisterToIRODSRunnable implements Runnable {
 
     @Override
     public void run() {
+        logger.debug("ENTERING run()");
 
         final WorkflowRun workflowRun = workflowRunAttempt.getWorkflowRun();
         final Workflow workflow = workflowRun.getWorkflow();
@@ -73,26 +74,32 @@ public class RegisterToIRODSRunnable implements Runnable {
             String version = null;
             String dx = null;
 
-            for (Sample sample : sampleSet) {
-
-                Set<Attribute> attributeSet = workflowRun.getAttributes();
-                if (CollectionUtils.isNotEmpty(attributeSet)) {
-                    Iterator<Attribute> attributeIter = attributeSet.iterator();
-                    while (attributeIter.hasNext()) {
-                        Attribute attribute = attributeIter.next();
-                        if ("GATKDepthOfCoverage.interval_list.version".equals(attribute.getName())) {
-                            version = attribute.getValue();
-                        }
-                        if ("SAMToolsView.dx.id".equals(attribute.getName())) {
-                            dx = attribute.getValue();
-                        }
+            Set<Attribute> attributeSet = workflowRun.getAttributes();
+            if (CollectionUtils.isNotEmpty(attributeSet)) {
+                Iterator<Attribute> attributeIter = attributeSet.iterator();
+                while (attributeIter.hasNext()) {
+                    Attribute attribute = attributeIter.next();
+                    if ("GATKDepthOfCoverage.interval_list.version".equals(attribute.getName())) {
+                        version = attribute.getValue();
+                    }
+                    if ("SAMToolsView.dx.id".equals(attribute.getName())) {
+                        dx = attribute.getValue();
                     }
                 }
+            }
+
+            if (version == null && dx == null) {
+                logger.warn("Both version and dx were null");
+                return;
+            }
+
+            for (Sample sample : sampleSet) {
 
                 // assumption: a dash is used as a delimiter between a participantId and
                 // the external code
                 int idx = sample.getName().lastIndexOf("-");
                 String participantId = idx != -1 ? sample.getName().substring(0, idx) : sample.getName();
+                logger.info("participantId = {}", participantId);
 
                 File outputDirectory = SequencingWorkflowUtil.createOutputDirectory(sample, workflow);
                 File tmpDir = new File(outputDirectory, "tmp");
