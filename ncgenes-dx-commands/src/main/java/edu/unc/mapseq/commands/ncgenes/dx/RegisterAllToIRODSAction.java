@@ -32,7 +32,7 @@ public class RegisterAllToIRODSAction implements Action {
     public Object execute() throws Exception {
         logger.debug("ENTERING execute()");
         try {
-            ExecutorService es = Executors.newSingleThreadExecutor();
+            ExecutorService es = Executors.newFixedThreadPool(2);
             List<Workflow> foundWorkflows = maPSeqDAOBeanService.getWorkflowDAO().findByName("NCGenesDX");
 
             if (CollectionUtils.isNotEmpty(foundWorkflows)) {
