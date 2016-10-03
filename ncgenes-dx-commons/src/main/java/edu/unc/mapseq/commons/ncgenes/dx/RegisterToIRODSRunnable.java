@@ -59,10 +59,10 @@ public class RegisterToIRODSRunnable implements Runnable {
     public void run() {
         logger.debug("ENTERING run()");
 
-        final WorkflowRun workflowRun = workflowRunAttempt.getWorkflowRun();
-        final Workflow workflow = workflowRun.getWorkflow();
-
         try {
+
+            WorkflowRun workflowRun = workflowRunAttempt.getWorkflowRun();
+            Workflow workflow = workflowRun.getWorkflow();
 
             Set<Sample> sampleSet = SequencingWorkflowUtil.getAggregatedSamples(mapseqDAOBeanService, workflowRunAttempt);
 
@@ -92,6 +92,9 @@ public class RegisterToIRODSRunnable implements Runnable {
                 logger.warn("Both version and dx were null");
                 return;
             }
+
+            logger.info("version = {}", version);
+            logger.info("dx = {}", dx);
 
             for (Sample sample : sampleSet) {
 
@@ -310,7 +313,7 @@ public class RegisterToIRODSRunnable implements Runnable {
             }
 
         } catch (WorkflowException | MaPSeqDAOException e) {
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
         }
     }
 
