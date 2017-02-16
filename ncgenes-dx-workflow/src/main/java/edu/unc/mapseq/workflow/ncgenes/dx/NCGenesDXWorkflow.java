@@ -241,7 +241,7 @@ public class NCGenesDXWorkflow extends AbstractSequencingWorkflow {
                 // new job
                 builder = SequencingWorkflowJobFactory.createJob(++count, ZipCLI.class, attempt.getId(), sample.getId()).siteName(siteName);
                 File zipOutputFile = new File(outputDirectory, picardSortOutput.getName().replace(".bam", ".zip"));
-                builder.addArgument(ZipCLI.WORKDIR, tmpDirectory.getAbsolutePath())
+                builder.addArgument(ZipCLI.WORKDIR, outputDirectory.getAbsolutePath())
                         .addArgument(ZipCLI.ENTRY, picardSortOutput.getAbsolutePath())
                         .addArgument(ZipCLI.ENTRY, picardSortSAMIndexOut.getAbsolutePath())
                         .addArgument(ZipCLI.OUTPUT, zipOutputFile.getAbsolutePath());
