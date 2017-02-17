@@ -99,9 +99,14 @@ public class RegisterToIRODSRunnable implements Runnable {
 
                 // assumption: a dash is used as a delimiter between a participantId and
                 // the external code
-                int idx = sample.getName().lastIndexOf("-");
-                String participantId = idx != -1 ? sample.getName().substring(0, idx) : sample.getName();
-                logger.info("participantId = {}", participantId);
+                String participantId;
+                if (!sample.getName().startsWith("HRC")) {
+                    int idx = sample.getName().lastIndexOf("-");
+                    participantId = idx != -1 ? sample.getName().substring(0, idx) : sample.getName();
+                    logger.info("participantId = {}", participantId);
+                } else {
+                    participantId = sample.getName();
+                }
 
                 File outputDirectory = SequencingWorkflowUtil.createOutputDirectory(sample, workflow);
                 File tmpDir = new File(outputDirectory, "tmp");
