@@ -12,6 +12,9 @@
   <version>0.6.64-SNAPSHOT</version>
   <packaging>pom</packaging>
   <url>https://jdr0887.github.io/MaPSeq-Pipeline-NCGenes-DX</url>
+  <properties>
+    <maven.site.plugin.skip>false</maven.site.plugin.skip>    
+  </properties>              
   <organization>
     <name>RENCI</name>
     <url>http://www.renci.org/</url>
