@@ -10,6 +10,9 @@
   <artifactId>ncgenes-dx-commons</artifactId>
   <version>0.6.64-SNAPSHOT</version>
   <packaging>bundle</packaging>
+  <properties>
+    <maven.site.plugin.skip>true</maven.site.plugin.skip>    
+  </properties>              
   <dependencies>
     <dependency>
       <groupId>commons-io</groupId>
