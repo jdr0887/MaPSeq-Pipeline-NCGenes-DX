@@ -70,32 +70,40 @@ public class RegisterToIRODSRunnable implements Runnable {
                 return;
             }
 
-            String version = null;
-            String dx = null;
-
-            Set<Attribute> attributeSet = workflowRun.getAttributes();
-            if (CollectionUtils.isNotEmpty(attributeSet)) {
-                Iterator<Attribute> attributeIter = attributeSet.iterator();
-                while (attributeIter.hasNext()) {
-                    Attribute attribute = attributeIter.next();
-                    if ("GATKDepthOfCoverage.interval_list.version".equals(attribute.getName())) {
-                        version = attribute.getValue();
-                    }
-                    if ("SAMToolsView.dx.id".equals(attribute.getName())) {
-                        dx = attribute.getValue();
-                    }
-                }
-            }
-
-            if (version == null && dx == null) {
-                logger.warn("Both version and dx were null");
-                return;
-            }
-
-            logger.info("version = {}", version);
-            logger.info("dx = {}", dx);
+            Attribute versionAttribute = workflowRun.getAttributes().stream()
+                    .filter(a -> a.getName().equals("GATKDepthOfCoverage.interval_list.version")).findAny().orElse(null);
+            Attribute dxAttribute = workflowRun.getAttributes().stream().filter(a -> a.getName().equals("SAMToolsView.dx.id")).findAny()
+                    .orElse(null);
 
             for (Sample sample : sampleSet) {
+
+                if (versionAttribute == null) {
+                    // might be a sample attribute
+                    versionAttribute = sample.getAttributes().stream()
+                            .filter(a -> a.getName().equals("GATKDepthOfCoverage.interval_list.version")).findAny().orElse(null);
+                }
+
+                if (versionAttribute == null) {
+                    logger.warn("versionAttribute is null");
+                    return;
+                }
+
+                String version = versionAttribute.getValue();
+
+                if (dxAttribute == null) {
+                    // might be a sample attribute
+                    dxAttribute = sample.getAttributes().stream().filter(a -> a.getName().equals("SAMToolsView.dx.id")).findAny()
+                            .orElse(null);
+                }
+
+                if (dxAttribute == null) {
+                    logger.warn("dxAttribute is null");
+                    return;
+                }
+                String dx = dxAttribute.getValue();
+
+                logger.info("version = {}", version);
+                logger.info("dx = {}", dx);
 
                 // assumption: a dash is used as a delimiter between a participantId and
                 // the external code
