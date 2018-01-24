@@ -172,11 +172,6 @@ public class NCGenesDXWorkflow extends AbstractSequencingWorkflow {
                     }
                 }
 
-                if (bamFile == null) {
-                    logger.error("bam file to process was not found");
-                    throw new WorkflowException("bam file to process was not found");
-                }
-
                 bamIndexFile = WorkflowUtil.findFileByJobAndMimeTypeAndWorkflowId(getWorkflowBeanService().getMaPSeqDAOBeanService(),
                         fileDataSet, SAMToolsIndex.class, MimeType.APPLICATION_BAM_INDEX, workflow.getId());
 
@@ -187,11 +182,6 @@ public class NCGenesDXWorkflow extends AbstractSequencingWorkflow {
                             break;
                         }
                     }
-                }
-
-                if (bamIndexFile == null) {
-                    logger.error("bam index file was not found");
-                    throw new WorkflowException("bam index file was not found");
                 }
 
                 gatkApplyRecalibrationOut = WorkflowUtil.findFileByJobAndMimeTypeAndWorkflowId(
@@ -210,11 +200,21 @@ public class NCGenesDXWorkflow extends AbstractSequencingWorkflow {
                     }
                 }
 
-                if (gatkApplyRecalibrationOut == null) {
-                    logger.error("gatkApplyRecalibrationOut file to process was not found");
-                    throw new WorkflowException("gatkApplyRecalibrationOut file to process was not found");
-                }
+            }
 
+            if (bamFile == null) {
+                logger.error("bam file to process was not found");
+                throw new WorkflowException("bam file to process was not found");
+            }
+
+            if (bamIndexFile == null) {
+                logger.error("bam index file was not found");
+                throw new WorkflowException("bam index file was not found");
+            }
+
+            if (gatkApplyRecalibrationOut == null) {
+                logger.error("gatkApplyRecalibrationOut file to process was not found");
+                throw new WorkflowException("gatkApplyRecalibrationOut file to process was not found");
             }
 
             try {
