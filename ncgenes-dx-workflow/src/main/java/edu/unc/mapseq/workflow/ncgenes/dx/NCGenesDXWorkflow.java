@@ -1,6 +1,7 @@
 package edu.unc.mapseq.workflow.ncgenes.dx;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -75,9 +76,18 @@ public class NCGenesDXWorkflow extends AbstractSequencingWorkflow {
         // String icSNPIntervalList = getWorkflowBeanService().getAttributes().get("icSNPIntervalList");
 
         Boolean isIncidental = Boolean.FALSE;
-        Workflow ncgenesWorkflow = null;
+        List<Workflow> workflows = new ArrayList<>();
+
         try {
-            ncgenesWorkflow = getWorkflowBeanService().getMaPSeqDAOBeanService().getWorkflowDAO().findByName("NCGenesBaseline").get(0);
+            List<Workflow> foundWorkflows = getWorkflowBeanService().getMaPSeqDAOBeanService().getWorkflowDAO()
+                    .findByName("NCGenesBaseline");
+            if (CollectionUtils.isNotEmpty(foundWorkflows)) {
+                workflows.addAll(foundWorkflows);
+            }
+            foundWorkflows = getWorkflowBeanService().getMaPSeqDAOBeanService().getWorkflowDAO().findByName("NCGenesBaselineMem");
+            if (CollectionUtils.isNotEmpty(foundWorkflows)) {
+                workflows.addAll(foundWorkflows);
+            }
         } catch (MaPSeqDAOException e1) {
             e1.printStackTrace();
         }
@@ -140,42 +150,71 @@ public class NCGenesDXWorkflow extends AbstractSequencingWorkflow {
 
             Set<FileData> fileDataSet = sample.getFileDatas();
 
-            File bamFile = WorkflowUtil.findFileByJobAndMimeTypeAndWorkflowId(getWorkflowBeanService().getMaPSeqDAOBeanService(),
-                    fileDataSet, GATKTableRecalibration.class, MimeType.APPLICATION_BAM, ncgenesWorkflow.getId());
-            File ncgenesBaselineDirectory = SequencingWorkflowUtil.createOutputDirectory(sample, ncgenesWorkflow);
+            File bamFile = null;
+            File bamIndexFile = null;
+            File gatkApplyRecalibrationOut = null;
 
-            if (bamFile == null) {
-                List<File> files = Arrays.asList(ncgenesBaselineDirectory.listFiles((a, b) -> {
-                    if (b.endsWith(".recal.bam")) {
-                        return true;
-                    }
-                    return false;
-                }));
-                if (CollectionUtils.isNotEmpty(files)) {
-                    bamFile = files.get(0);
-                }
-            }
+            for (Workflow workflow : workflows) {
 
-            if (bamFile == null) {
-                logger.error("bam file to process was not found");
-                throw new WorkflowException("bam file to process was not found");
-            }
+                bamFile = WorkflowUtil.findFileByJobAndMimeTypeAndWorkflowId(getWorkflowBeanService().getMaPSeqDAOBeanService(),
+                        fileDataSet, GATKTableRecalibration.class, MimeType.APPLICATION_BAM, workflow.getId());
+                File baselineDirectory = SequencingWorkflowUtil.createOutputDirectory(sample, workflow);
 
-            File bamIndexFile = WorkflowUtil.findFileByJobAndMimeTypeAndWorkflowId(getWorkflowBeanService().getMaPSeqDAOBeanService(),
-                    fileDataSet, SAMToolsIndex.class, MimeType.APPLICATION_BAM_INDEX, ncgenesWorkflow.getId());
-
-            if (bamIndexFile == null) {
-                for (File file : ncgenesBaselineDirectory.listFiles()) {
-                    if (bamFile != null && bamFile.getName().replace(".bam", ".bai").equals(file.getName())) {
-                        bamIndexFile = file;
-                        break;
+                if (bamFile == null) {
+                    List<File> files = Arrays.asList(baselineDirectory.listFiles((a, b) -> {
+                        if (b.endsWith(".recal.bam")) {
+                            return true;
+                        }
+                        return false;
+                    }));
+                    if (CollectionUtils.isNotEmpty(files)) {
+                        bamFile = files.get(0);
                     }
                 }
-            }
 
-            if (bamIndexFile == null) {
-                logger.error("bam index file was not found");
-                throw new WorkflowException("bam index file was not found");
+                if (bamFile == null) {
+                    logger.error("bam file to process was not found");
+                    throw new WorkflowException("bam file to process was not found");
+                }
+
+                bamIndexFile = WorkflowUtil.findFileByJobAndMimeTypeAndWorkflowId(getWorkflowBeanService().getMaPSeqDAOBeanService(),
+                        fileDataSet, SAMToolsIndex.class, MimeType.APPLICATION_BAM_INDEX, workflow.getId());
+
+                if (bamIndexFile == null) {
+                    for (File file : baselineDirectory.listFiles()) {
+                        if (bamFile != null && bamFile.getName().replace(".bam", ".bai").equals(file.getName())) {
+                            bamIndexFile = file;
+                            break;
+                        }
+                    }
+                }
+
+                if (bamIndexFile == null) {
+                    logger.error("bam index file was not found");
+                    throw new WorkflowException("bam index file was not found");
+                }
+
+                gatkApplyRecalibrationOut = WorkflowUtil.findFileByJobAndMimeTypeAndWorkflowId(
+                        getWorkflowBeanService().getMaPSeqDAOBeanService(), fileDataSet, GATKApplyRecalibration.class, MimeType.TEXT_VCF,
+                        workflow.getId());
+
+                if (gatkApplyRecalibrationOut == null) {
+                    List<File> files = Arrays.asList(baselineDirectory.listFiles((a, b) -> {
+                        if (b.endsWith(".recalibrated.filtered.vcf")) {
+                            return true;
+                        }
+                        return false;
+                    }));
+                    if (CollectionUtils.isNotEmpty(files)) {
+                        gatkApplyRecalibrationOut = files.get(0);
+                    }
+                }
+
+                if (gatkApplyRecalibrationOut == null) {
+                    logger.error("gatkApplyRecalibrationOut file to process was not found");
+                    throw new WorkflowException("gatkApplyRecalibrationOut file to process was not found");
+                }
+
             }
 
             try {
@@ -249,27 +288,6 @@ public class NCGenesDXWorkflow extends AbstractSequencingWorkflow {
                 logger.info(zipJob.toString());
                 graph.addVertex(zipJob);
                 graph.addEdge(picardSortSAMIndexJob, zipJob);
-
-                File gatkApplyRecalibrationOut = WorkflowUtil.findFileByJobAndMimeTypeAndWorkflowId(
-                        getWorkflowBeanService().getMaPSeqDAOBeanService(), fileDataSet, GATKApplyRecalibration.class, MimeType.TEXT_VCF,
-                        ncgenesWorkflow.getId());
-
-                if (gatkApplyRecalibrationOut == null) {
-                    List<File> files = Arrays.asList(ncgenesBaselineDirectory.listFiles());
-                    if (CollectionUtils.isNotEmpty(files)) {
-                        for (File f : files) {
-                            if (f.getName().endsWith(".recalibrated.filtered.vcf")) {
-                                gatkApplyRecalibrationOut = f;
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                if (gatkApplyRecalibrationOut == null) {
-                    logger.error("gatkApplyRecalibrationOut file to process was not found");
-                    throw new WorkflowException("gatkApplyRecalibrationOut file to process was not found");
-                }
 
                 // new job
                 builder = SequencingWorkflowJobFactory.createJob(++count, FilterVariantCLI.class, attempt.getId(), sample.getId())
