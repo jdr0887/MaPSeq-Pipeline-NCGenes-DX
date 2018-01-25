@@ -141,7 +141,7 @@ public class RegisterToIRODSRunnable implements Runnable {
 
                 List<IRODSBean> files2RegisterToIRODS = new ArrayList<IRODSBean>();
 
-                String rootFileName = String.format("%s_%s_L%03d.fixed-rg.deduped.realign.fixmate.recal", sample.getFlowcell().getName(),
+                String rootFileName = String.format("%s_%s_L%03d.mem.fixed-rg.deduped.realign.fixmate.recal", sample.getFlowcell().getName(),
                         sample.getBarcode(), sample.getLaneIndex());
 
                 List<ImmutablePair<String, String>> attributeList = Arrays.asList(
